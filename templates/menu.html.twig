@@ -1,0 +1,29 @@
+<div class="d-flex d-print-none flex-row align-items-center px-md-4 mb-4 justify-content-between border-bottom header">
+    <div class="d-flex align-items-center py-1">
+        <a href="{{ path('app_home') }}" class="btn btn-link text-decoration-none gray-link">
+            <img
+                class="saclay-logo"
+                src="{{ asset('build/images/logo-paris-saclay.svg') }}" 
+                alt="{{ 'home_page.tutoring' | trans }}"
+            />
+        </a>
+        <h4 class="ps-3 m-0">Aristote</h4>
+    </div>
+
+    <nav class="my-2 my-md-0 mr-md-3">
+        {% if app.user %}
+            <small class="ms-2">
+                {{ app.user }}
+            </small>
+            <a
+                class="btn btn-link p-2 text-decoration-none gray-link"
+                href="{{ logout_path() }}"
+                data-bs-toggle="tooltip"
+                data-bs-placement="bottom"
+                title="{{ 'menu.logout' | trans }}"
+            >
+                <i class="fas fa-fw fa-power-off" data-fa-transform="grow-4"></i>
+            </a>
+        {% endif %}
+    </nav>
+</div>

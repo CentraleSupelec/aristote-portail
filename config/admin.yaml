@@ -1,0 +1,34 @@
+services:
+  admin.administrator:
+    class: App\Admin\AdministratorAdmin
+    tags:
+      - name: sonata.admin
+        model_class: App\Entity\Administrator
+        manager_type: orm
+        group: Utilisateurs
+        label: Administrateurs
+    calls:
+      - [setUserManager, ['@App\Service\UserManager']]
+    public: true
+  
+  admin.user:
+    class: App\Admin\UserAdmin
+    tags:
+      - name: sonata.admin
+        model_class: App\Entity\User
+        manager_type: orm
+        group: Utilisateurs
+        label: Utilisateurs
+    calls:
+      - [setUserManager, ['@App\Service\UserManager']]
+    public: true
+  
+  admin.domain:
+    class: App\Admin\AllowedDomainAdmin
+    tags:
+      - name: sonata.admin
+        model_class: App\Entity\AllowedDomain
+        manager_type: orm
+        group: Utilisateurs
+        label: Domaines
+    public: true

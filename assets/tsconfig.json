@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "jsx": "react",
+        "esModuleInterop": true,
+    },
+    "typeRoots": [
+        "global.d.ts",
+        "js-yaml-loader.d.ts",
+    ]
+}

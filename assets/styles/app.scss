@@ -1,0 +1,40 @@
+$red-custom: #9c003c;
+$gray-cs: #726481;
+
+$primary: $red-custom !default;
+$secondary: $gray-cs !default;
+
+@import "~bootstrap/scss/bootstrap";
+@import "~bootstrap/scss/variables";
+@import 'react-time-picker/dist/TimePicker.css';
+@import 'react-clock/dist/Clock.css';
+
+.saclay-logo {
+    height: 35px;
+}
+
+#create-enrichment-button {
+  width: 220px;
+}
+
+.enrichment-table {
+    td {
+      font-size: 17px;
+    }
+
+    td.enrichment-id {
+      font-size: 14px;
+    }
+  
+    th {
+      color: var(--bs-gray);
+      font-size: 12px;
+      text-align: center;
+      padding: 0.25rem;
+    }
+}
+
+.react-time-picker__wrapper {
+  border-radius: 6px;
+  padding: 3px 6px;
+}

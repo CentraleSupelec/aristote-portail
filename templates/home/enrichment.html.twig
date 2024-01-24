@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Aristote - Enrichment{% endblock %}
+
+{% block body %}
+<style>
+    .home-page-wrapper { margin: 1em auto; width: 95%; font: 18px/1.5 sans-serif; }
+    {# .example-wrapper code { background: #F5F5F5; padding: 2px 6px; } #}
+</style>
+
+<div class="home-page-wrapper">
+    <div {{ react_component('EnrichmentController', {enrichmentId, enrichmentVersion}) }}>
+        Loading... <i class="fas fa-cog fa-spin fa-3x"></i>
+    </div>
+</div>
+{% endblock %}

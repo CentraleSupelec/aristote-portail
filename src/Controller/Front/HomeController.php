@@ -1,0 +1,204 @@
+<?php
+
+namespace App\Controller\Front;
+
+use App\Service\AristoteApiService;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+
+#[Route('/home')]
+class HomeController extends AbstractController
+{
+    public function __construct(
+        private readonly AristoteApiService $aristoteApiService
+    ) {
+    }
+
+    #[Route('/', name: 'app_home')]
+    public function home(): Response
+    {
+        return $this->render('home/index.html.twig', [
+            'controller_name' => 'HomeController',
+        ]);
+    }
+
+    #[Route('/api/enrichments/url', name: 'app_create_enrichment_by_url', options: ['expose' => true], methods: ['POST'])]
+    public function createEnrichmentByUrl(Request $request, HttpClientInterface $httpClient): JsonResponse
+    {
+        $user = $this->getUser();
+        $requestBody = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $requestBody['endUserIdentifier'] = $user->getUserIdentifier();
+        $response = $this->aristoteApiService->apiRequestWithToken('POST', '/enrichments/url', [
+            'body' => json_encode($requestBody, JSON_THROW_ON_ERROR),
+        ]);
+
+        return new JsonResponse($response->toArray());
+    }
+
+    #[Route('/api/enrichments/upload', name: 'app_create_enrichment_by_file', options: ['expose' => true], methods: ['POST'])]
+    public function createEnrichmentByFile(Request $request, HttpClientInterface $httpClient): JsonResponse
+    {
+        $user = $this->getUser();
+        /** @var UploadedFile $file */
+        $file = $request->files->get('file');
+        $notificationWebhookUrl = $request->request->get('notificationWebhookUrl');
+        $enrichmentParameters = $request->request->get('enrichmentParameters');
+        $fileResource = fopen($file->getPathname(), 'r');
+
+        $response = $this->aristoteApiService->apiRequestWithToken('POST', '/enrichments/upload', [
+            'body' => [
+                'file' => $fileResource,
+                'originalFileName' => $file->getClientOriginalName(),
+                'notificationWebhookUrl' => $notificationWebhookUrl,
+                'endUserIdentifier' => $user->getUserIdentifier(),
+                'enrichmentParameters' => $enrichmentParameters,
+            ],
+            'headers' => [
+                'Content-Type' => 'multipart/form-data',
+            ],
+        ]);
+        fclose($fileResource);
+
+        return new JsonResponse($response->toArray());
+    }
+
+    #[Route('/enrichments/{enrichmentId}', name: 'app_enrichment', options: ['expose' => true])]
+    public function enrichmentById(string $enrichmentId): Response
+    {
+        $response = $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions/latest', $enrichmentId));
+        $data = $response->toArray();
+        if (true === $data['initialVersion'] && null === $data['lastEvaluationDate']) {
+            return $this->redirectToRoute('app_enrichment_evaluate', ['enrichmentId' => $enrichmentId]);
+        }
+
+        return $this->render('home/enrichment.html.twig', ['enrichmentId' => $enrichmentId, 'enrichmentVersion' => $data]);
+    }
+
+    #[Route('/enrichments/{enrichmentId}/create_new_version', name: 'app_create_new_version', options: ['expose' => true])]
+    public function createNewVersion(string $enrichmentId): Response
+    {
+        $response = $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions/latest', $enrichmentId));
+        $data = $response->toArray();
+
+        return $this->render('home/new_enrichment_version.html.twig', ['enrichmentId' => $enrichmentId, 'enrichmentVersion' => $data]);
+    }
+
+    #[Route('/enrichments/{enrichmentId}/evaluate', name: 'app_enrichment_evaluate', options: ['expose' => true])]
+    public function evaluateEnrichment(string $enrichmentId): Response
+    {
+        return $this->render('home/enrichment_evaluate.html.twig', ['enrichmentId' => $enrichmentId]);
+    }
+
+    #[Route('/api/enrichments', name: 'app_enrichments', options: ['expose' => true])]
+    public function enrichments(HttpClientInterface $httpClient): JsonResponse
+    {
+        $user = $this->getUser();
+        $response = $this->aristoteApiService->apiRequestWithToken('GET', '/enrichments', [
+            'query' => [
+                'endUserIdentifier' => $user->getUserIdentifier(),
+            ],
+        ]);
+        $data = $response->toArray();
+
+        return new JsonResponse($data);
+    }
+
+    #[Route('/api/enrichment/{enrichmentId}/versions/latest', name: 'app_latest_enrichment_version', options: ['expose' => true])]
+    public function latestEnrichmentVersion(string $enrichmentId): JsonResponse
+    {
+        $response = $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions/latest', $enrichmentId));
+        $data = $response->toArray();
+
+        return new JsonResponse($data);
+    }
+
+    #[Route('/api/enrichment/{enrichmentId}/versions', name: 'app_get_enrichment_versions', methods: ['GET'], options: ['expose' => true])]
+    public function getEnrichmentVersions(string $enrichmentId): JsonResponse
+    {
+        $response = $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions?withTranscript=false&order=ASC&size=50', $enrichmentId));
+        $data = $response->toArray();
+
+        return new JsonResponse($data);
+    }
+
+    #[Route('/api/enrichment/{enrichmentId}/versions/{versionId}', name: 'app_get_enrichment_version', options: ['expose' => true])]
+    public function getEnrichmentVersion(string $enrichmentId, string $versionId): JsonResponse
+    {
+        $response = $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions/%s', $enrichmentId, $versionId));
+        $data = $response->toArray();
+
+        return new JsonResponse($data);
+    }
+
+    #[Route('/api/enrichment/{enrichmentId}', name: 'app_get_enrichment', options: ['expose' => true])]
+    public function getEnrichment(string $enrichmentId): JsonResponse
+    {
+        $response = $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s', $enrichmentId));
+        $data = $response->toArray();
+
+        return new JsonResponse($data);
+    }
+
+    #[Route('/api/enrichment/{enrichmentId}/versions/{versionId}/evaluate', name: 'app_evaluate_enrichment_version', methods: ['POST'], options: ['expose' => true])]
+    public function evaluatEnrichmentVersion(string $enrichmentId, string $versionId, Request $request): JsonResponse
+    {
+        $requestBody = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        $response = $this->aristoteApiService->apiRequestWithToken('POST', sprintf('/enrichments/%s/versions/%s/evaluate', $enrichmentId, $versionId), [
+            'body' => json_encode($requestBody, JSON_THROW_ON_ERROR),
+        ]);
+
+        return new JsonResponse($response->toArray());
+    }
+
+    #[Route('/api/enrichment/{enrichmentId}/versions/{versionId}/mcq/{mcqId}', name: 'app_evaluate_mcq', methods: ['POST'], options: ['expose' => true])]
+    public function evaluateMcq(string $enrichmentId, string $versionId, string $mcqId, Request $request): JsonResponse
+    {
+        $requestBody = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        $response = $this->aristoteApiService->apiRequestWithToken('POST', sprintf('/enrichments/%s/versions/%s/mcq/%s', $enrichmentId, $versionId, $mcqId), [
+            'body' => json_encode($requestBody, JSON_THROW_ON_ERROR),
+        ]);
+
+        return new JsonResponse($response->toArray());
+    }
+
+    #[Route('/api/enrichment/{enrichmentId}/versions/{versionId}/mcq/{mcqId}/choice/{choiceId}', name: 'app_evaluate_choice', methods: ['POST'], options: ['expose' => true])]
+    public function evaluateChoice(string $enrichmentId, string $versionId, string $mcqId, string $choiceId, Request $request): JsonResponse
+    {
+        $requestBody = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        $response = $this->aristoteApiService->apiRequestWithToken('POST',
+            sprintf('/enrichments/%s/versions/%s/mcq/%s/choice/%s', $enrichmentId, $versionId, $mcqId, $choiceId),
+            [
+                'body' => json_encode($requestBody, JSON_THROW_ON_ERROR),
+            ]
+        );
+
+        return new JsonResponse($response->toArray());
+    }
+
+    #[Route('/api/enrichment/{enrichmentId}/versions', name: 'app_create_enrichment_version', methods: ['POST'], options: ['expose' => true])]
+    public function createEnrichmentVersion(string $enrichmentId, Request $request): JsonResponse
+    {
+        $multipleChoiceQuestions = $request->request->get('multipleChoiceQuestions');
+        $enrichmentVersionMetadata = $request->request->get('enrichmentVersionMetadata');
+
+        $response = $this->aristoteApiService->apiRequestWithToken('POST', sprintf('/enrichments/%s/versions', $enrichmentId), [
+            'body' => [
+                'enrichmentVersionMetadata' => $enrichmentVersionMetadata,
+                'multipleChoiceQuestions' => $multipleChoiceQuestions,
+            ],
+            'headers' => [
+                'Content-Type' => 'multipart/form-data',
+            ],
+        ]);
+
+        return new JsonResponse($response->toArray());
+    }
+}

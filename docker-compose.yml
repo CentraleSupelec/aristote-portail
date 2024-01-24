@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  node:
+    image: node:20
+    user: node
+    working_dir: /app
+    entrypoint: /bin/sh
+    command: -c 'npm install && npm run watch'
+    depends_on:
+      - php
+    volumes:
+      - "./:/app"
+      - "$HOME/.npmrc:/home/node/.npmrc"
+
+  php:
+    build:
+      dockerfile: docker/php/Dockerfile
+      context: .
+      target: php_dev
+    user: "${UID:-0}:${GID:-0}"
+    command:
+      - php-fpm
+      - -d xdebug.client_host=host.docker.internal
+    environment:
+      PHP_CS_FIXER_IGNORE_ENV: 1
+    depends_on:
+      - postgres
+    volumes:
+      - ".:/app:cached"
+      - "./var/cache:/app/var/cache:delegated"
+      - "./var/log:/app/var/log:delegated"
+      - "./vendor:/app/vendor:delegated"
+    
+  nginx:
+    build:
+      context: .
+      dockerfile: ./docker/nginx/Dockerfile
+      target: nginx_dev
+    depends_on:
+      - php
+    environment:
+      PHP_BACKEND: php
+    volumes:
+      - "./docker/nginx/default.conf.template:/etc/nginx/templates/default.conf.template:cached"
+      - ".:/app:cached"
+    ports:
+      - ${FRONT_PORT:-8082}:80
+
+  postgres:
+    image: postgres:15-alpine
+    restart: on-failure
+    volumes:
+      - db-data:/var/lib/postgresql/data:rw
+    environment:
+      POSTGRES_USER: aristote-front
+      POSTGRES_PASSWORD: aristote-front
+      POSTGRES_DB: aristote-front-db
+      POSTGRES_INITDB_ARGS: "--locale-provider=icu --icu-locale=sl-SI"
+    ports:
+      - ${DATABASE_PORT:-5434}:5432
+
+  postgres-test:
+    image: postgres:15-alpine
+    restart: on-failure
+    environment:
+      POSTGRES_USER: aristote-front
+      POSTGRES_PASSWORD: aristote-front
+      POSTGRES_DB: aristote-front-db
+      POSTGRES_INITDB_ARGS: "--locale-provider=icu --icu-locale=sl-SI"
+    ports:
+      - "5435:5432"
+  
+  mailhog:
+    container_name: aristote-front-mailhog
+    image: mailhog/mailhog
+    restart: always
+    ports:
+      - ${MAILHOG_PORT_SMTP:-1025}:1025
+      - ${MAILHOG_PORT_HTTP:-8025}:8025
+
+volumes:
+  db-data:

@@ -1,0 +1,13 @@
+admin_controllers:
+  resource:
+    path: ../src/Controller/Sonata/
+    namespace: App\Controller\Sonata
+  type: attribute
+
+front_controllers:
+  resource:
+    path: ../src/Controller/Front/
+    namespace: App\Controller\Front
+  type: attribute
+  prefix: /
+
