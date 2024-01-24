@@ -2,7 +2,6 @@
 
 namespace App\Admin;
 
-use App\Service\UserManager;
 use Sonata\AdminBundle\Admin\AbstractAdmin;
 use Sonata\AdminBundle\Datagrid\ListMapper;
 use Sonata\AdminBundle\Form\FormMapper;

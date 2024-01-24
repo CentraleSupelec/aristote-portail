@@ -18,8 +18,8 @@ services:
     nginx:
         build:
             context: .
-            dockerfile: docker/nginx/Dockerfile
-            target: nginx_prod
+            dockerfile: docker/nginx/Dockerfile.prod
+            target: nginx
             args:
                 PHP_DESTINATION: aristote-front-php-prod
         image: aristote-front-nginx-prod
