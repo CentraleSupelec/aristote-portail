@@ -20,6 +20,6 @@ RUN npm ci && npm run build
 
 FROM nginx:1.25-alpine as nginx
 
-COPY docker/nginx/default-prod.conf.template /etc/nginx/templates/default.conf.template
+COPY docker/nginx/default.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=assets-prod /app/public /app/public
 COPY --from=php-build /app/public/bundles /app/public/bundles
