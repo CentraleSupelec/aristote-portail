@@ -1,23 +1,52 @@
 $red-custom: #9c003c;
 $gray-cs: #726481;
+$warning-cs: #CE802B;
+$thumb-gray: #5B5B5B;
 
 $primary: $red-custom !default;
 $secondary: $gray-cs !default;
+$warning: $warning-cs !default;
 
 @import "~bootstrap/scss/bootstrap";
 @import "~bootstrap/scss/variables";
 @import 'react-time-picker/dist/TimePicker.css';
 @import 'react-clock/dist/Clock.css';
 
-.saclay-logo {
+
+.thumb-gray {
+  color: $thumb-gray
+}
+
+#status-tooltip {
+  .tooltip-arrow::before {
+    border-right-color: #DEE2E6;
+  }
+
+  .tooltip-inner {
+    max-width: 400px;
+    background-color: #DEE2E6;
+    color: black;
+  }
+}
+
+body {
+  .saclay-logo {
     height: 35px;
-}
+  }
 
-#create-enrichment-button {
-  width: 220px;
-}
+  #create-enrichment-button {
+    width: 220px;
+  }
 
-.enrichment-table {
+  #open-enrichment-creation-modal-button {
+    font-family: 'Open Sans', sans-serif;
+  }
+
+  #media-icon {
+    font-size: 150px;
+  }
+
+  .enrichment-table {
     td {
       font-size: 17px;
     }
@@ -25,16 +54,65 @@ $secondary: $gray-cs !default;
     td.enrichment-id {
       font-size: 14px;
     }
-  
+
     th {
-      color: var(--bs-gray);
-      font-size: 12px;
+      font-size: 16px;
       text-align: center;
       padding: 0.25rem;
     }
+  }
+
+  .react-time-picker__wrapper {
+    border-radius: 6px;
+    padding: 3px 6px;
+  }
+
+  .criteria-badge {
+    font-size: 16px;
+  }
 }
 
-.react-time-picker__wrapper {
-  border-radius: 6px;
-  padding: 3px 6px;
+@font-face {
+  font-family: "Open Sans";
+  font-style: normal;
+  font-weight: 400;
+  src: url("../fonts/open-sans-v16-latin-regular.eot"); /* IE9 Compat Modes */
+  src: local("Open Sans Regular"), local("OpenSans-Regular"), url("../fonts/open-sans-v16-latin-regular.eot?#iefix") format("embedded-opentype"), url("../fonts/open-sans-v16-latin-regular.woff2") format("woff2"), url("../fonts/open-sans-v16-latin-regular.woff") format("woff"),
+      url("../fonts/open-sans-v16-latin-regular.ttf") format("truetype"), url("../fonts/open-sans-v16-latin-regular.svg#OpenSans") format("svg"); /* Legacy iOS */
+}
+
+@font-face {
+  font-family: "Roboto";
+  font-style: normal;
+  font-weight: 400;
+  src: url("../fonts/Roboto-Regular.eot"); /* IE9 Compat Modes */
+  src: local("Roboto-Regular"), local("Roboto-Regular"), url("../fonts/Roboto-Regular.eot?#iefix") format("embedded-opentype"), url("../fonts/Roboto-Regular.woff2") format("woff2"), url("../fonts/Roboto-Regular.woff") format("woff"), url("../fonts/Roboto-Regular.ttf") format("truetype"),
+      url("../fonts/Roboto-Regular.svg#Roboto") format("svg"); /* Legacy iOS */
+}
+
+@font-face {
+  font-family: "Roboto";
+  font-style: italic;
+  font-weight: 400;
+  src: url("../fonts/Roboto-Italic.eot"); /* IE9 Compat Modes */
+  src: local("Roboto-Italic"), local("Roboto-Italic"), url("../fonts/Roboto-Italic.eot?#iefix") format("embedded-opentype"), url("../fonts/Roboto-Italic.woff2") format("woff2"), url("../fonts/Roboto-Italic.woff") format("woff"), url("../fonts/Roboto-Italic.ttf") format("truetype"),
+      url("../fonts/Roboto-Italic.svg#Roboto") format("svg"); /* Legacy iOS */
+}
+
+@font-face {
+  font-family: "Roboto";
+  font-style: normal;
+  font-weight: 700;
+  src: url("../fonts/Roboto-Bold.eot"); /* IE9 Compat Modes */
+  src: local("Roboto-Bold"), local("Roboto-Bold"), url("../fonts/Roboto-Bold.eot?#iefix") format("embedded-opentype"), url("../fonts/Roboto-Bold.woff2") format("woff2"), url("../fonts/Roboto-Bold.woff") format("woff"), url("../fonts/Roboto-Bold.ttf") format("truetype"),
+      url("../fonts/Roboto-Bold.svg#Roboto") format("svg"); /* Legacy iOS */
+}
+
+@font-face {
+  font-family: "Roboto";
+  font-style: normal;
+  font-weight: 500;
+  src: url("../fonts/Roboto-Medium.eot"); /* IE9 Compat Modes */
+  src: local("Roboto-Medium"), local("Roboto-Medium"), url("../fonts/Roboto-Medium.eot?#iefix") format("embedded-opentype"), url("../fonts/Roboto-Medium.woff2") format("woff2"), url("../fonts/Roboto-Medium.woff") format("woff"), url("../fonts/Roboto-Medium.ttf") format("truetype"),
+      url("../fonts/Roboto-Medium.svg#Roboto") format("svg"); /* Legacy iOS */
 }

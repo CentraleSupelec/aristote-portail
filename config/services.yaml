@@ -31,4 +31,9 @@ services:
 
   App\Controller\Front\HomeController:
     arguments:
+      $fromEmail: "%env(FROM_EMAIL)%"
       $aristoteApiService: '@app.aristote_front'
+  
+  App\Controller\Front\RegistrationController:
+    arguments:
+      $fromEmail: "%env(FROM_EMAIL)%"

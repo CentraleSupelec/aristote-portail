@@ -35,7 +35,6 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
     const [disableForm, setDisableForm] = useState<boolean>(false);
     
     const toggleEditModal = () => {
-        // setShowEditModal(!showEditModal);
         redirectToCreateNewVersionPage();
     }
 
@@ -414,7 +413,7 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                                             </td>
                                             <td className="border-end text-center d-flex flex-column">
                                                 {multipleChoiceQuestion.choices? multipleChoiceQuestion.choices.sort(sortChoices).map(choice => 
-                                                    <div className='d-flex align-items-center'>
+                                                    <div key={`choice-${choice.id}`} className='d-flex align-items-center'>
                                                         <i className={`me-2 ${choice.correctAnswer? 'fa-solid fa-check text-success' : 'fa-solid fa-xmark text-danger'}`}></i>
                                                         <Badge
                                                             key={`choice-${choice.id}`}

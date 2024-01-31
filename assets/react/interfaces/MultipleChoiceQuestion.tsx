@@ -1,5 +1,6 @@
 import Choice from "./Choice";
 import AnswerPointer from "./AnswerPointer";
+import Evaluation from "./Evaluation";
 
 export default interface MultipleChoiceQuestion {
     id: string,
@@ -7,7 +8,7 @@ export default interface MultipleChoiceQuestion {
     question: string,
     answerPointer: AnswerPointer,
     choices: Choice[],
-    evaluation: Object,
+    evaluation: Evaluation,
     thumbUp: boolean,
     userFeedback: string
 }

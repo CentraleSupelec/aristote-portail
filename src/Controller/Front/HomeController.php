@@ -3,11 +3,14 @@
 namespace App\Controller\Front;
 
 use App\Service\AristoteApiService;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -15,6 +18,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 class HomeController extends AbstractController
 {
     public function __construct(
+        private readonly string $fromEmail,
         private readonly AristoteApiService $aristoteApiService
     ) {
     }
@@ -25,6 +29,41 @@ class HomeController extends AbstractController
         return $this->render('home/index.html.twig', [
             'controller_name' => 'HomeController',
         ]);
+    }
+
+    #[Route('/api/webhook', name: 'app_enrichment_notification', options: ['expose' => true], methods: ['POST'])]
+    public function sendEmailNotification(Request $request, HttpClientInterface $httpClient, MailerInterface $mailer,
+    ): JsonResponse {
+        $requestBody = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $enrichmentId = $requestBody['id'];
+        $status = $requestBody['status'];
+
+        $response = $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s', $enrichmentId));
+        $enrichment = $response->toArray();
+
+        if (array_key_exists('endUserIdentifier', $enrichment)) {
+            $endUserIdentifier = $enrichment['endUserIdentifier'];
+        } else {
+            return new JsonResponse(['status' => 'KO', 'error' => sprintf('No endUserIdentifier found for the enrichment %s', $enrichmentId)], Response::HTTP_BAD_REQUEST);
+        }
+
+        $originalFileName = $enrichment['media']['originalFileName'];
+
+        $email = (new TemplatedEmail())
+            ->from(new Address($this->fromEmail, 'Portal Aristote'))
+            ->to($endUserIdentifier)
+            ->subject(sprintf("L'enrichissement de %s %s", $originalFileName, 'SUCCESS' === $status ? 'est terminé avec succès' : 'a échoué'))
+            ->htmlTemplate('home/enrichment_notification.html.twig')
+        ;
+
+        $context = $email->getContext();
+        $context['enrichment'] = $enrichment;
+        $context['status'] = $status;
+
+        $email->context($context);
+        $mailer->send($email);
+
+        return new JsonResponse(['status' => 'OK']);
     }
 
     #[Route('/api/enrichments/url', name: 'app_create_enrichment_by_url', options: ['expose' => true], methods: ['POST'])]

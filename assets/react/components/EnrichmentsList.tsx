@@ -1,6 +1,7 @@
 import moment from 'moment';
 import React from 'react';
-import { Badge, Button } from 'react-bootstrap';
+import { Badge, Button, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { OverlayInjectedProps } from 'react-bootstrap/esm/Overlay';
 import Enrichments from '../interfaces/Enrichments';
 
 interface EnrichmentsListProps {
@@ -10,8 +11,8 @@ interface EnrichmentsListProps {
 const STATUS_TRANSLATION = {
     WAITING_MEIDA_UPLOAD: 'En attente de téléversement',
     UPLOADING_MEDIA: 'En cours de téléversement',
-    TRANSCRIBING_MEDIA: 'En cours de transcription',
     WAITING_MEDIA_TRANSCRIPTION: 'En attente de transcription',
+    TRANSCRIBING_MEDIA: 'En cours de transcription',
     WAITING_AI_ENRICHMENT: "En attente de l'enrichissement",
     AI_ENRICHING: "En cours d'enrichissement",
     WAITING_AI_EVALUATION: "En attente d'évaluation",
@@ -20,22 +21,47 @@ const STATUS_TRANSLATION = {
     FAILURE: 'Erreur'
 }
 
+const renderTooltip = (props: OverlayInjectedProps) => (
+    <Tooltip id="status-tooltip" {...props}>
+        <div className='d-flex flex-column'>
+            <div className='fw-bold text-start ms-2 mb-1'>
+                Liste des statuts
+            </div>
+            <ul>
+                {Object.values(STATUS_TRANSLATION).map((status, index) => <li key={`status-${index}`} className='text-start'>{status}</li>)}
+            </ul>
+        </div>
+    </Tooltip>
+);
+
 export default function ({enrichments}: EnrichmentsListProps) {
     moment.locale('fr');
+
     return (
         <div className='table-responsive'>
             <table className="enrichment-table table table-sm table-borderless table-hover align-middle mb-0 border-bottom">
                 <thead>
                     <tr className="border-bottom text-center">
-                        <th className="border-end col-4">
+                        <th className="border-end col-4 fw-bold">
                             Nom du fichier
                         </th>
                         <th className="border-end col-4">
-                            Status
+                            <div className='d-flex align-items-center justify-content-center'>
+                                <div className='pe-2'>
+                                    Statut
+                                </div>
+                                <OverlayTrigger
+                                    placement="right"
+                                    delay={{ show: 250, hide: 999999 }}
+                                    overlay={renderTooltip}
+                                >
+                                    <div>
+                                        <i className="fa-solid fa-circle-info text-secondary"></i>
+                                    </div>
+                                </OverlayTrigger>
+                            </div>
                         </th>
-                        <th className="border-end col-3">
-                            Actions
-                        </th>
+                        <th className="border-end col-3"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -55,7 +81,7 @@ export default function ({enrichments}: EnrichmentsListProps) {
                                 <td className="border-end text-center">
                                     {
                                         enrichment.status === 'SUCCESS' ? 
-                                            <Button href={'enrichments/'+enrichment.id} title='Edit'>Accéder</Button> 
+                                            <Button href={'enrichments/'+enrichment.id} title='Edit'>Voir</Button> 
                                             : null
                                     }
                                 </td>

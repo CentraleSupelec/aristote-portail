@@ -9,7 +9,7 @@ import EnrichmentsList from '../components/EnrichmentsList';
 import SelectOption from '../interfaces/SelectOption';
 
 export default function () {
-    const NOTIFICATION_URL = 'http://localhost:8080/send_email_notification';
+    const NOTIFICATION_URL = window.location.origin.replace('localhost', 'host.docker.internal');
     const [enrichments, setEnrichments] = useState<Enrichments>();
     const [selectedMediaTypes, setSelectedMediaTypes] = useState<SelectOption[]>([]);
     const [selectedDisciplines, setSelectedDisciplines] = useState<SelectOption[]>([]);
@@ -27,6 +27,7 @@ export default function () {
     ]
 
     const availableAIs = [
+        {value: null, label: "Pas d'évaluation"},
         {value: 'ChatGPT', label: 'ChatGPT'},
     ]
 
@@ -50,7 +51,9 @@ export default function () {
         const enrichmentParameters = {
             mediaTypes: selectedMediaTypes.map(mediaType => mediaType.value),
             disciplines: selectedDisciplines.map(discipline => discipline.value),
-            aiEvaluation: selectedAi?.value
+        }
+        if (selectedAi?.value) {
+            enrichmentParameters['aiEvaluation'] = selectedAi.value;
         }
 
         if (uploadViaUrl) {
@@ -60,7 +63,7 @@ export default function () {
                 method: 'POST',
                 body: JSON.stringify({
                     url,
-                    notificationWebhookUrl: NOTIFICATION_URL,
+                    notificationWebhookUrl: NOTIFICATION_URL + Routing.generate('app_enrichment_notification'),
                     enrichmentParameters
                 })
             })
@@ -75,7 +78,7 @@ export default function () {
             const file = event.target[2].files[0];
             const params = new FormData();
             params.append('file', file);
-            params.append('notificationWebhookUrl', NOTIFICATION_URL);
+            params.append('notificationWebhookUrl', NOTIFICATION_URL + Routing.generate('app_enrichment_notification'));
             params.append('enrichmentParameters', JSON.stringify(enrichmentParameters))
 
             fetch(Routing.generate("app_create_enrichment_by_file"), {
@@ -107,7 +110,7 @@ export default function () {
     return (
         <div className='d-flex flex-column align-items-center'>
             <div>
-                <Button onClick={() => toggleModal()}>
+                <Button id='open-enrichment-creation-modal-button' onClick={() => toggleModal()}>
                     Créer un enrichissement
                 </Button>
                 <Modal show={showModal} onHide={toggleModal} size='lg'>

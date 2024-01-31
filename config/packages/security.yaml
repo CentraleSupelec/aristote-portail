@@ -54,6 +54,7 @@ security:
     - { path: "^/admin/login", role: PUBLIC_ACCESS }
     - { path: "^/admin/logout", role: PUBLIC_ACCESS }
     - { path: "^/admin", roles: ROLE_SUPER_ADMIN }
+    - { path: "^/home/api/webhook", role: PUBLIC_ACCESS }
     - { path: "^/home/login", role: PUBLIC_ACCESS }
     - { path: "^/home/register", role: PUBLIC_ACCESS }
     - { path: ^/home, role: ROLE_USER }
