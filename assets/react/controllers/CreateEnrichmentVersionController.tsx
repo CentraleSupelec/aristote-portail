@@ -1,12 +1,9 @@
-import React, { BaseSyntheticEvent, ChangeEvent, useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
 import Routing from '../../Routing';
-import { Badge, Button, Card, Carousel, Form, Modal, Spinner } from 'react-bootstrap';
+import { Button, Card, Form, Spinner } from 'react-bootstrap';
 import EnrichmentVersion from '../interfaces/EnrichmentVersion';
-import EvaluationResponse from '../interfaces/EvaluationResponse';
 import Choice from '../interfaces/Choice';
 import MultipleChoiceQuestion from '../interfaces/MultipleChoiceQuestion';
-import EnrichmentVersions from '../interfaces/EnrichmentVersions';
-import cloneDeep from 'lodash/cloneDeep';
 import Enrichment from '../interfaces/Enrichment';
 import makeAnimated from "react-select/animated";
 import CreatableSelect from "react-select/creatable";
@@ -26,7 +23,6 @@ export default function ({ enrichmentId, enrichmentVersion: inputEnrichmentVersi
     moment.locale('fr');
     const animatedComponents = makeAnimated();
     const [enrichmentVersion, setEnrichmentVersion] = useState<EnrichmentVersion>();
-    // const [temporaryCopyEnrichmentVersion, setTemporaryCopyEnrichmentVersion] = useState<EnrichmentVersion>();
     const [enrichment, setEnrichment] = useState<Enrichment>();
     const [modified, setModified] = useState<boolean>(false);
     const [disableForm, setDisableForm] = useState<boolean>(false);
@@ -35,7 +31,6 @@ export default function ({ enrichmentId, enrichmentVersion: inputEnrichmentVersi
         if (inputEnrichmentVersion) {
             console.log(inputEnrichmentVersion)
             setEnrichmentVersion(inputEnrichmentVersion);
-            // setTemporaryCopyEnrichmentVersion(inputEnrichmentVersion);
         }
         fetchEnrichment();
     }, [inputEnrichmentVersion]);

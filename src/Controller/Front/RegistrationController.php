@@ -21,8 +21,10 @@ use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 
 class RegistrationController extends AbstractController
 {
-    public function __construct(private readonly EmailVerifier $emailVerifier)
-    {
+    public function __construct(
+        private readonly string $fromEmail,
+        private readonly EmailVerifier $emailVerifier
+    ) {
     }
 
     #[Route('/home/register', name: 'app_register')]
@@ -54,9 +56,9 @@ class RegistrationController extends AbstractController
             // generate a signed url and email it to the user
             $this->emailVerifier->sendEmailConfirmation('app_verify_email', $user,
                 (new TemplatedEmail())
-                    ->from(new Address('no-reply@aristote.com', 'Aristote Registration'))
+                    ->from(new Address($this->fromEmail, 'Portal Aristote'))
                     ->to($user->getEmail())
-                    ->subject('Please Confirm your Email')
+                    ->subject("Vérification d'email")
                     ->htmlTemplate('registration/confirmation_email.html.twig')
             );
 
