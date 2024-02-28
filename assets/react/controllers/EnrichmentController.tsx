@@ -363,18 +363,18 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                             <strong>Discipline : </strong>{enrichmentVersion.enrichmentVersionMetadata.discipline}
                         </div>
                         <div>
-                            <strong>Type de média : </strong>{enrichmentVersion.enrichmentVersionMetadata.mediaType}
+                            <strong>Nature du média : </strong>{enrichmentVersion.enrichmentVersionMetadata.mediaType}
                         </div>
                         <div className='my-2'>
-                            <Button variant='secondary' className='me-3' onClick={downloadTranscript}>Télécharger le transcript</Button>
-                            <Button variant='secondary' onClick={downloadMultipleChoiceQuestions}>Télécharger les QCMs</Button>
+                            <Button variant='secondary' className='me-3' onClick={downloadTranscript}>Télécharger la transciption</Button>
+                            <Button variant='secondary' onClick={downloadMultipleChoiceQuestions}>Télécharger le QCM</Button>
                         </div>
 
                         {enrichmentVersion.initialVersion? 
                             <div className='d-flex align-items-center'>
                                 <strong>Date de la dernière évaluation :&nbsp;</strong>
                                 <div className='me-2'>
-                                    {enrichmentVersion.lastEvaluationDate ? moment(enrichmentVersion.lastEvaluationDate).format('Do MMMM YYYY à H:m') : "Pas d'évaluation effectuée"}
+                                    {enrichmentVersion.lastEvaluationDate ? moment(enrichmentVersion.lastEvaluationDate).format('Do MMMM YYYY à HH:mm') : "Pas d'évaluation effectuée"}
                                 </div>
                                 <div>
                                     <Button onClick={redirectToEvaluationPage}>Soumettre une {enrichmentVersion.lastEvaluationDate ? 'nouvelle': ''} évaluation</Button>
@@ -391,13 +391,13 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                         <table className="enrichment-table table table-sm table-borderless table-hover align-middle mb-0 border-bottom">
                             <thead>
                                 <tr className="border-bottom text-center">
-                                    <th style={{width: '400px'}} className="border-end">
+                                    <th className="border-end col-3">
                                         Question
                                     </th>
-                                    <th style={{width: '300px'}} className="border-end">
+                                    <th className="border-end col-3">
                                         Explication
                                     </th>
-                                    <th className="border-end">
+                                    <th className="border-end col-6">
                                         Réponses
                                     </th>
                                 </tr>
@@ -418,7 +418,7 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                                                         <Badge
                                                             key={`choice-${choice.id}`}
                                                             bg='light'
-                                                            className='my-2 me-2 flex-grow-1 text-dark'
+                                                            className='my-2 me-2 flex-grow-1 text-dark text-wrap'
                                                         >
                                                             {choice.optionText}
                                                         </Badge>
