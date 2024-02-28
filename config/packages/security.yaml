@@ -36,7 +36,7 @@ security:
       access_denied_url: /admin/login
 
     user:
-      pattern: /home(.*)
+      pattern: /(.*)
       provider: user
       user_checker: App\Security\UserChecker
       form_login:
@@ -54,10 +54,10 @@ security:
     - { path: "^/admin/login", role: PUBLIC_ACCESS }
     - { path: "^/admin/logout", role: PUBLIC_ACCESS }
     - { path: "^/admin", roles: ROLE_SUPER_ADMIN }
-    - { path: "^/home/api/webhook", role: PUBLIC_ACCESS }
-    - { path: "^/home/login", role: PUBLIC_ACCESS }
-    - { path: "^/home/register", role: PUBLIC_ACCESS }
-    - { path: ^/home, role: ROLE_USER }
+    - { path: "^/api/webhook", role: PUBLIC_ACCESS }
+    - { path: "^/login", role: PUBLIC_ACCESS }
+    - { path: "^/register", role: PUBLIC_ACCESS }
+    - { path: ^/, role: ROLE_USER }
 
 when@test:
   security:

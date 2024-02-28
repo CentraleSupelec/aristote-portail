@@ -52,7 +52,7 @@ export default function ({enrichments}: EnrichmentsListProps) {
                                 </div>
                                 <OverlayTrigger
                                     placement="right"
-                                    delay={{ show: 250, hide: 999999 }}
+                                    delay={{ show: 250, hide: 400 }}
                                     overlay={renderTooltip}
                                 >
                                     <div>
@@ -68,7 +68,11 @@ export default function ({enrichments}: EnrichmentsListProps) {
                     {enrichments ? enrichments.content.map(enrichment => 
                             <tr className="border-bottom" key={`enrichment-row-${enrichment.id}`}>
                                 <td className="border-end text-center enrichment-id">
-                                    {enrichment.media.originalFileName} déposé le {moment(enrichment.createdAt).format('DD/MM/YYYY à H:m')}
+                                    {enrichment.media ? 
+                                        enrichment.media.originalFileName + ' déposé le ' + moment(enrichment.createdAt).format('DD/MM/YYYY à H:m')
+                                        :
+                                        '-'
+                                    }
                                 </td>
                                 <td className="border-end text-center">
                                     <Badge 

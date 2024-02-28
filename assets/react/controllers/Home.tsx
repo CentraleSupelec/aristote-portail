@@ -140,7 +140,7 @@ export default function () {
                             {uploadViaUrl? 
                                 <Form.Group className="mb-3" controlId="mediaUpload.url">
                                     <Form.Label>URL du fichier média</Form.Label>
-                                    <Form.Control type="string" />
+                                    <Form.Control placeholder="Entrez l'URL de votre fichier" type="string" />
                                 </Form.Group>
                                 :
                                 <Form.Group className="mb-3" controlId="mediaUpload.file">
@@ -154,29 +154,35 @@ export default function () {
                                     className='mb-3'
                                     components={animatedComponents}
                                     options={availableAIs}
-                                    placeholder='Choisir une IA pour évaluer les QCMs'
+                                    placeholder="Choisissez l'IA qui évaluera la proposition d'Aristote"
                                     onChange={onAiChange}
                                 />
                             </Form.Group>
+                            <Form.Group className="mb-3" controlId="mediaUpload.disciplines">
+                                <Form.Label className='mb-1'>Disciplines</Form.Label>
+                                <div className='text-black-50 small mb-2'>
+                                    Aristote choisira la discipline principale de votre média parmi la liste que vous lui proposez
+                                </div>
+                                <CreatableSelect
+                                    className='mb-3'
+                                    components={animatedComponents}
+                                    isMulti
+                                    placeholder='Mathématiques, Sociologie, Chimie, ...'
+                                    onChange={onDisciplinesChange}
+                                />
+                            </Form.Group>
                             <Form.Group className="mb-3" controlId="mediaUpload.mediaTypes">
-                                <Form.Label>Types de média</Form.Label>
+                                <Form.Label className='mb-1'>Nature du média</Form.Label>
+                                <div className='text-black-50 small mb-2'>
+                                    Aristote choisira la nature de votre média parmi la liste que vous lui proposez
+                                </div>
                                 <CreatableSelect
                                     className='mb-3'
                                     components={animatedComponents}
                                     isMulti
                                     options={mediaTypes}
-                                    placeholder='Choisir des types de médias'
+                                    placeholder='Conférence, cours, webinaire, ...'
                                     onChange={onMediaTypesChange}
-                                />
-                            </Form.Group>
-                            <Form.Group className="mb-3" controlId="mediaUpload.disciplines">
-                                <Form.Label>Disciplines</Form.Label>
-                                <CreatableSelect
-                                    className='mb-3'
-                                    components={animatedComponents}
-                                    isMulti
-                                    placeholder='Choisir des disciplines'
-                                    onChange={onDisciplinesChange}
                                 />
                             </Form.Group>
                             <div className='d-flex justify-content-end'>

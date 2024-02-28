@@ -292,7 +292,7 @@ export default function ({enrichmentId} : EnrichmentControllerProps) {
                                 </div>
                                 <div className='d-flex justify-content-between'>
                                     <div className='me-2'>
-                                        <strong>Type de média : </strong> {enrichmentVersion.enrichmentVersionMetadata.mediaType}
+                                        <strong>Nature de média : </strong> {enrichmentVersion.enrichmentVersionMetadata.mediaType}
                                     </div>
                                     <div
                                         className='d-flex'
@@ -354,17 +354,17 @@ export default function ({enrichmentId} : EnrichmentControllerProps) {
                     <div className='fw-bold h3'>
                         QCM
                     </div>
-                    <div className='table-responsive table-striped mt-5'>
+                    <div className='table-striped mt-5'>
                         <table className="enrichment-table table table-sm table-borderless table-hover align-middle mb-0 border-bottom">
                             <thead>
                                 <tr className="border-bottom text-center">
-                                    <th style={{width: '400px'}} className="border-end">
+                                    <th className="border-end col-4">
                                         Question
                                     </th>
-                                    <th style={{width: '300px'}} className="border-end">
+                                    <th className="border-end col-2">
                                         Critères respectés
                                     </th>
-                                    <th className="border-end">
+                                    <th className="border-end col-6">
                                         Réponses
                                     </th>
                                 </tr>
@@ -374,7 +374,7 @@ export default function ({enrichmentId} : EnrichmentControllerProps) {
                                         <tr className="border-bottom" key={`question-row-${multipleChoiceQuestion.id}`}>
                                             <td className="border-end text-center">
                                                 <div 
-                                                    className='d-flex justify-content-center'
+                                                    className='d-flex justify-content-center align-items-center'
                                                     key={`mcq-
                                                         ${multipleChoiceQuestion.id}
                                                         ${multipleChoiceQuestion.thumbUp === true ? '-thumb-up' : ''}
@@ -423,7 +423,8 @@ export default function ({enrichmentId} : EnrichmentControllerProps) {
                                                                 <Badge
                                                                     key={`choice-${choice.id}`}
                                                                     bg='light'
-                                                                    className='my-2 me-2 flex-grow-1 text-dark'
+                                                                    className='my-2 me-2 flex-grow-1 text-dark text-wrap'
+
                                                                 >
                                                                     {choice.optionText}
                                                                 </Badge>
@@ -478,7 +479,7 @@ export default function ({enrichmentId} : EnrichmentControllerProps) {
 
                     <Modal show={showMetadataUserFeedbackModal} onHide={toggleMetadataUserFeedbackModal} size='lg'>
                         <Modal.Header closeButton>
-                            <Modal.Title>Un commentaire conceranant les métadonnées ?</Modal.Title>
+                            <Modal.Title>Comment puis-je m'améliorer ?</Modal.Title>
                         </Modal.Header>
                         <Modal.Body>
                             <Form onSubmit={updateMetadataFeedback}>

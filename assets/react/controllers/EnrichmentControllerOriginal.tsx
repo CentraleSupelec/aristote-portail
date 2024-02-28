@@ -284,10 +284,10 @@ export default function ({enrichmentId} : EnrichmentControllerProps) {
                             <strong>Type de média : </strong>{enrichmentVersion.enrichmentVersionMetadata.mediaType}
                         </div>
                         <div className='my-2'>
-                            <Button onClick={downloadTranscript}>Télécharger le transcript</Button>
+                            <Button onClick={downloadTranscript}>Télécharger la transciption</Button>
                         </div>
                         <div className='my-2'>
-                            <Button onClick={downloadMultipleChoiceQuestions}>Télécharger les QCMs</Button>
+                            <Button onClick={downloadMultipleChoiceQuestions}>Télécharger le QCM</Button>
                         </div>
                         <div className='my-2 align-self-end'>
                             <Button onClick={createNewVersion} disabled={!modified}>Créer une nouvelle version</Button>
