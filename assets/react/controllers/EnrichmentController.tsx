@@ -45,7 +45,6 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
 
     useEffect(() => {
         if (inputEnrichmentVersion) {
-            console.log(inputEnrichmentVersion)
             setEnrichmentVersion(inputEnrichmentVersion);
             setTemporaryCopyEnrichmentVersion(inputEnrichmentVersion);
         }

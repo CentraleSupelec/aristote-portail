@@ -29,7 +29,6 @@ export default function ({ enrichmentId, enrichmentVersion: inputEnrichmentVersi
 
     useEffect(() => {
         if (inputEnrichmentVersion) {
-            console.log(inputEnrichmentVersion)
             setEnrichmentVersion(inputEnrichmentVersion);
         }
         fetchEnrichment();
@@ -161,7 +160,6 @@ export default function ({ enrichmentId, enrichmentVersion: inputEnrichmentVersi
     }
 
     const updateAnswerPointer = (mcqIndex: number, value: string) => {
-        console.log(value);
         let temporaryMCQs = [...enrichmentVersion.multipleChoiceQuestions];
         temporaryMCQs[mcqIndex].answerPointer.startAnswerPointer = value;
         setEnrichmentVersion({...enrichmentVersion, multipleChoiceQuestions: temporaryMCQs})

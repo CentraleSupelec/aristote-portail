@@ -182,6 +182,24 @@ class HomeController extends AbstractController
         return new JsonResponse($data);
     }
 
+    #[Route('/api/enrichments/{enrichmentId}', name: 'app_delete_enrichment', options: ['expose' => true], methods: ['DELETE'])]
+    public function deleteEnrichmentById(string $enrichmentId): Response
+    {
+        $response = $this->aristoteApiService->apiRequestWithToken('DELETE', sprintf('/enrichments/%s', $enrichmentId));
+        $data = $response->toArray();
+
+        return new JsonResponse($data);
+    }
+
+    #[Route('/api/enrichments/get_ai_model_infrastructure_combinations', name: 'app_get_ai_model_infrastructure_combinations', options: ['expose' => true])]
+    public function getAiModelInfrastructureCombinations(): Response
+    {
+        $response = $this->aristoteApiService->apiRequestWithToken('GET', '/enrichments/ai_model_infrastructure_combinations');
+        $data = $response->toArray();
+
+        return new JsonResponse($data);
+    }
+
     #[Route('/api/enrichment/{enrichmentId}/versions/{versionId}/evaluate', name: 'app_evaluate_enrichment_version', methods: ['POST'], options: ['expose' => true])]
     public function evaluatEnrichmentVersion(string $enrichmentId, string $versionId, Request $request): JsonResponse
     {
