@@ -175,17 +175,13 @@ export default function ({enrichmentId} : EnrichmentControllerProps) {
     }
 
     const evaluationColor = (evaluation: Evaluation) => {
-        console.log(evaluation)
         const criteriaCount = Object.keys(evaluation).length
         const respectedCriteriaNumber = Object.values(evaluation).filter(value => value === true).length;
         if (respectedCriteriaNumber <= criteriaCount / 4) {
-            console.log("danger")
             return 'danger';
         } else if (respectedCriteriaNumber <= criteriaCount / 2) {
-            console.log("warning")
             return 'warning';
         } else {
-            console.log("success")
             return 'success';
         }
     }

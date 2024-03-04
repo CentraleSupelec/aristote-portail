@@ -7,53 +7,67 @@ import makeAnimated from "react-select/animated";
 import Enrichments from '../interfaces/Enrichments';
 import EnrichmentsList from '../components/EnrichmentsList';
 import SelectOption from '../interfaces/SelectOption';
+import AiModelInfrastructureCombination from '../interfaces/AiModelInfrastructureCombination';
 
 export default function () {
     const NOTIFICATION_URL = window.location.origin.replace('localhost', 'host.docker.internal');
     const [enrichments, setEnrichments] = useState<Enrichments>();
+    const [aiModelInfrastructureCombinations, setAiModelInfrastructureCombinations] = useState<AiModelInfrastructureCombination[]>([]);
     const [selectedMediaTypes, setSelectedMediaTypes] = useState<SelectOption[]>([]);
     const [selectedDisciplines, setSelectedDisciplines] = useState<SelectOption[]>([]);
-    const [selectedAi, setSelectedAi] = useState<SelectOption>();
+    const [selectedAiModelInfrastructureCombination, setSelectedAiModelInfrastructureCombination] = useState<AiModelInfrastructureCombination>();
+    const [selectedEvaluationAi, setSelectedEvaluationAi] = useState<SelectOption>();
     const [showModal, setShowModal] = useState<boolean>(false);
     const [disableForm, setDisableForm] = useState<boolean>(false);
     const [uploadViaUrl, setUploadViaUrl] = useState<boolean>(true);
 
     const toggleModal = () => setShowModal(!showModal);
     const animatedComponents = makeAnimated();
-    const mediaTypes = [
+    const mediaTypes: SelectOption[] = [
         {value: 'Conférence', label: 'Conférence'},
         {value: 'Cours', label: 'Cours'},
         {value: 'Amphi', label: 'Amphi'}
     ]
 
-    const availableAIs = [
-        {value: null, label: "Pas d'évaluation"},
+    const availableAIs: SelectOption[] = [
         {value: 'ChatGPT', label: 'ChatGPT'},
     ]
 
     useEffect(() => {
         fetchEnrichments();
+        fetchAiModelInfrastructureCombinations();
     }, []);
 
     const fetchEnrichments = () => {
         fetch(Routing.generate('app_enrichments'))
             .then(response => response.json())
             .then(data => {
-                console.log(data);
                 setEnrichments(data);
+            })
+    }
+
+    const fetchAiModelInfrastructureCombinations = () => {
+        fetch(Routing.generate('app_get_ai_model_infrastructure_combinations'))
+            .then(response => response.json())
+            .then((data: AiModelInfrastructureCombination[]) => {
+                setAiModelInfrastructureCombinations(data);
             })
     }
 
     const uploadVideoByUrl = (event: BaseSyntheticEvent) => {
         event.preventDefault();
         setDisableForm(true);
-        console.log(event);
         const enrichmentParameters = {
             mediaTypes: selectedMediaTypes.map(mediaType => mediaType.value),
             disciplines: selectedDisciplines.map(discipline => discipline.value),
         }
-        if (selectedAi?.value) {
-            enrichmentParameters['aiEvaluation'] = selectedAi.value;
+        if (selectedEvaluationAi) {
+            enrichmentParameters['aiEvaluation'] = selectedEvaluationAi.value;
+        }
+
+        if (selectedAiModelInfrastructureCombination) {
+            enrichmentParameters['aiModel'] = selectedAiModelInfrastructureCombination.aiModel;
+            enrichmentParameters['infrastructure'] = selectedAiModelInfrastructureCombination.infrastructure;
         }
 
         if (uploadViaUrl) {
@@ -69,7 +83,6 @@ export default function () {
             })
             .then(response => response.json())
             .then(data => {
-                console.log(data);
                 fetchEnrichments();
                 setDisableForm(false);
                 toggleModal();
@@ -87,7 +100,6 @@ export default function () {
                 })
                 .then(response => response.json())
                 .then(data => {
-                    console.log(data)
                     fetchEnrichments();
                     setDisableForm(false);
                     toggleModal();
@@ -104,7 +116,15 @@ export default function () {
     }
 
     const onAiChange = (newValue: SelectOption) => {
-        setSelectedAi(newValue);
+        setSelectedEvaluationAi(newValue);
+    }
+
+    const onAiModelInfrastructureCombinationChange = (newValue: AiModelInfrastructureCombination) => {
+        setSelectedAiModelInfrastructureCombination(newValue);
+    }
+
+    const getValue = (aiModelInfrastructureCombination: AiModelInfrastructureCombination) => {
+        return aiModelInfrastructureCombination.aiModel + '@' + aiModelInfrastructureCombination.infrastructure
     }
 
     return (
@@ -149,6 +169,19 @@ export default function () {
                                 </Form.Group>
                             }
                             <Form.Group className="mb-3" controlId="mediaUpload.aiEvaluation">
+                                <Form.Label>Modèle et infrastructure</Form.Label>
+                                <Select
+                                    className='mb-3'
+                                    components={animatedComponents}
+                                    options={aiModelInfrastructureCombinations}
+                                    placeholder="Choisissez le modèle qui va enrichir votre média et l'infrastructure sur laquelle il va tourner"
+                                    onChange={onAiModelInfrastructureCombinationChange}
+                                    getOptionLabel={getValue}
+                                    getOptionValue={getValue}
+                                    isClearable
+                                />
+                            </Form.Group>
+                            <Form.Group className="mb-3" controlId="mediaUpload.aiEvaluation">
                                 <Form.Label>IA d'évaluation</Form.Label>
                                 <Select
                                     className='mb-3'
@@ -156,6 +189,7 @@ export default function () {
                                     options={availableAIs}
                                     placeholder="Choisissez l'IA qui évaluera la proposition d'Aristote"
                                     onChange={onAiChange}
+                                    isClearable
                                 />
                             </Form.Group>
                             <Form.Group className="mb-3" controlId="mediaUpload.disciplines">
@@ -201,7 +235,7 @@ export default function () {
                 </Modal>
             </div>
             <div className='mt-5 w-100'>
-                <EnrichmentsList enrichments={enrichments}></EnrichmentsList>
+                <EnrichmentsList enrichments={enrichments} fetchEnrichments={fetchEnrichments}></EnrichmentsList>
             </div>
         </div>
     )
