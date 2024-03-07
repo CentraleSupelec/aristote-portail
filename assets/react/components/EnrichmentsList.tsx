@@ -97,7 +97,7 @@ export default function ({enrichments, fetchEnrichments}: EnrichmentsListProps) 
                             <tr className="border-bottom" key={`enrichment-row-${enrichment.id}`}>
                                 <td className="border-end text-center enrichment-id">
                                     {enrichment.media ? 
-                                        enrichment.media.originalFileName + ' déposé le ' + moment(enrichment.createdAt).format('DD/MM/YYYY à H:m')
+                                        enrichment.media.originalFileName + ' déposé le ' + moment(enrichment.createdAt).format('DD/MM/YYYY à HH:mm')
                                         :
                                         '-'
                                     }
