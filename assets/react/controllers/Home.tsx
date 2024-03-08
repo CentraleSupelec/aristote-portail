@@ -65,6 +65,9 @@ export default function () {
             enrichmentParameters['aiEvaluation'] = selectedEvaluationAi.value;
         }
 
+        enrichmentParameters['aiModel'] = null;
+        enrichmentParameters['infrastructure'] = null;
+
         if (selectedAiModelInfrastructureCombination) {
             enrichmentParameters['aiModel'] = selectedAiModelInfrastructureCombination.aiModel;
             enrichmentParameters['infrastructure'] = selectedAiModelInfrastructureCombination.infrastructure;

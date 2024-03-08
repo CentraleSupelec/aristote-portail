@@ -343,7 +343,7 @@ export default function ({ enrichmentId, enrichmentVersion: inputEnrichmentVersi
                                         disableClock={true}
                                         format="HH:mm:ss"
                                         maxDetail="second"
-                                        value={multipleChoiceQuestion.answerPointer.startAnswerPointer}
+                                        value={multipleChoiceQuestion.answerPointer?.startAnswerPointer}
                                         clockIcon={null}
                                     />
                                 </Form.Group>
