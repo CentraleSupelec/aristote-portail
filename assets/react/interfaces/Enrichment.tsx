@@ -11,5 +11,14 @@ export default interface Enrichment {
     notifiedAt: string,
     status: string,
     media: Media,
-    createdAt: string
+    createdAt: string,
+    transcribedBy?: Worker,
+    aiProcessedBy?: Worker,
+    aiEvaluatedBy?: Worker,
+    aiEnrichmentEndedAt?: string,
+    aiEnrichmentStartedAt?: string,
+    aiEvaluationEndedAt?: string,
+    aiEvaluationStartedAt?: string,
+    transribingEndedAt?: string,
+    transribingStartedAt?: string
 }

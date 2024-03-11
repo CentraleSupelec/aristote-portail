@@ -139,6 +139,7 @@ class HomeController extends AbstractController
         $response = $this->aristoteApiService->apiRequestWithToken('GET', '/enrichments', [
             'query' => [
                 'endUserIdentifier' => $user->getUserIdentifier(),
+                'withStatus' => 'true',
             ],
         ]);
         $data = $response->toArray();
