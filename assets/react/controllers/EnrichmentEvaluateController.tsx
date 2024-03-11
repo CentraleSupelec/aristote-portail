@@ -462,7 +462,7 @@ export default function ({enrichmentId} : EnrichmentControllerProps) {
                                     <Form.Label>
                                         Vous pouvez ajouter un commentaire si vous voulez :
                                     </Form.Label>
-                                    <Form.Control as="textarea" rows={3} />
+                                    <Form.Control as="textarea" rows={3} defaultValue={enrichmentVersion.multipleChoiceQuestions[currentMultipleChoiceQuestionIndex].userFeedback} />
                                 </Form.Group>
                                 <div className='d-flex justify-content-end'>
                                     <Button type='submit'>
@@ -483,7 +483,7 @@ export default function ({enrichmentId} : EnrichmentControllerProps) {
                                     <Form.Label>
                                         Vous pouvez écrire votre commentaire ici :
                                     </Form.Label>
-                                    <Form.Control as="textarea" rows={3} />
+                                    <Form.Control as="textarea" rows={3} defaultValue={enrichmentVersion.enrichmentVersionMetadata.userFeedback?? ''}/>
                                 </Form.Group>
                                 <div className='d-flex justify-content-end'>
                                     <Button id='send-feedback-button' type='submit'>
