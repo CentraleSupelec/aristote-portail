@@ -1,21 +1,11 @@
-import React, { BaseSyntheticEvent, ChangeEvent, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Routing from '../../Routing';
-import { Badge, Button, Carousel, Form, Modal, Spinner } from 'react-bootstrap';
+import { Badge, Button } from 'react-bootstrap';
 import EnrichmentVersion from '../interfaces/EnrichmentVersion';
-import EvaluationResponse from '../interfaces/EvaluationResponse';
 import Choice from '../interfaces/Choice';
 import MultipleChoiceQuestion from '../interfaces/MultipleChoiceQuestion';
 import EnrichmentVersions from '../interfaces/EnrichmentVersions';
-import cloneDeep from 'lodash/cloneDeep';
-import Enrichment from '../interfaces/Enrichment';
-import makeAnimated from "react-select/animated";
-import CreatableSelect from "react-select/creatable";
-import Select from "react-select";
-import SelectOption from '../interfaces/SelectOption';
 import moment from 'moment';
-import TimePicker from 'react-time-picker';
-import 'react-time-picker/dist/TimePicker.css';
-import 'react-clock/dist/Clock.css';
 
 interface EnrichmentControllerProps {
     enrichmentId: string,
@@ -24,51 +14,19 @@ interface EnrichmentControllerProps {
 
 export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersion} : EnrichmentControllerProps) {
     moment.locale('fr');
-    const animatedComponents = makeAnimated();
     const [enrichmentVersion, setEnrichmentVersion] = useState<EnrichmentVersion>();
-    const [temporaryCopyEnrichmentVersion, setTemporaryCopyEnrichmentVersion] = useState<EnrichmentVersion>();
     const [enrichmentVersions, setEnrichmentVersions] = useState<EnrichmentVersion[]>([]);
-    const [enrichment, setEnrichment] = useState<Enrichment>();
-    const [currentMultipleChoiceQuestionIndex, setCurrentMultipleChoiceQuestionIndex] = useState<number>(0);
-    const [showEditModal, setShowEditModal] = useState<boolean>(false);
-    const [modified, setModified] = useState<boolean>(false);
-    const [disableForm, setDisableForm] = useState<boolean>(false);
     
     const toggleEditModal = () => {
         redirectToCreateNewVersionPage();
     }
 
-    const closeEditModal = () => {
-        setTemporaryCopyEnrichmentVersion(enrichmentVersion);
-        setShowEditModal(false);
-    }
-
     useEffect(() => {
         if (inputEnrichmentVersion) {
             setEnrichmentVersion(inputEnrichmentVersion);
-            setTemporaryCopyEnrichmentVersion(inputEnrichmentVersion);
         }
         fetchEnrichmentVersions();
-        fetchEnrichment();
     }, [inputEnrichmentVersion]);
-
-    const fetchEnrichment = () => {
-        fetch(Routing.generate('app_get_enrichment', {enrichmentId}))
-            .then(response => response.json())
-            .then(data => {
-                setEnrichment(data);
-            })
-    }
-
-    const fetchLatestEnrichmentVersion = () => {
-        fetch(Routing.generate('app_latest_enrichment_version', {enrichmentId}))
-            .then(response => response.json())
-            .then((data: EnrichmentVersion) => {
-                setEnrichmentVersion(cloneDeep(data));
-                setTemporaryCopyEnrichmentVersion(cloneDeep(data));
-                setModified(false);
-            })
-    }
 
     const fetchEnrichmentVersions = () => {
         fetch(Routing.generate('app_get_enrichment_versions', {enrichmentId}))
@@ -83,7 +41,6 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
             .then(response => response.json())
             .then((data: EnrichmentVersion) => {
                 setEnrichmentVersion(data);
-                setTemporaryCopyEnrichmentVersion(data);
             })
     }
 
@@ -189,139 +146,6 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
 
     const sortMCQs = (firstMCQ: MultipleChoiceQuestion, secondMCQ: MultipleChoiceQuestion): number => {
         return firstMCQ.id > secondMCQ.id ? 1 : -1;
-    }
-
-    const updateChoiceCorrectAnswer = (choiceIndex: number) => {
-        let temporaryMCQs = [...temporaryCopyEnrichmentVersion.multipleChoiceQuestions];
-        let temporaryChoices = [
-            ...temporaryCopyEnrichmentVersion.multipleChoiceQuestions[currentMultipleChoiceQuestionIndex].choices
-        ];
-        temporaryChoices.forEach(choice => choice.correctAnswer = false);
-        temporaryChoices[choiceIndex].correctAnswer = true;
-        temporaryMCQs[currentMultipleChoiceQuestionIndex].choices = temporaryChoices;
-        setTemporaryCopyEnrichmentVersion({...temporaryCopyEnrichmentVersion, multipleChoiceQuestions: temporaryMCQs})
-        setModified(true);
-    }
-
-    const addOption = () => {
-        let temporaryMCQs = [...temporaryCopyEnrichmentVersion.multipleChoiceQuestions];
-        let newChoice: Choice = {
-            id: null,
-            optionText: '',
-            correctAnswer: false,
-            thumbUp: null
-        }
-        temporaryMCQs[currentMultipleChoiceQuestionIndex].choices.push(newChoice);
-        let newEnrichmentVersion: EnrichmentVersion = {...temporaryCopyEnrichmentVersion, multipleChoiceQuestions: temporaryMCQs};
-        setTemporaryCopyEnrichmentVersion(newEnrichmentVersion);
-        setModified(true);
-    }
-
-    const removeOption = (choiceIndex: number) => {
-        let temporaryMCQs = [...temporaryCopyEnrichmentVersion.multipleChoiceQuestions];
-        let temporaryChoices = [...temporaryCopyEnrichmentVersion.multipleChoiceQuestions[currentMultipleChoiceQuestionIndex].choices];
-        temporaryChoices.splice(choiceIndex, 1);
-        if (temporaryCopyEnrichmentVersion.multipleChoiceQuestions[currentMultipleChoiceQuestionIndex].choices[choiceIndex].correctAnswer) {
-            temporaryChoices[0].correctAnswer = true;
-        }
-        temporaryMCQs[currentMultipleChoiceQuestionIndex].choices = temporaryChoices;
-        let newEnrichmentVersion: EnrichmentVersion = {...temporaryCopyEnrichmentVersion, multipleChoiceQuestions: temporaryMCQs};
-        setTemporaryCopyEnrichmentVersion(newEnrichmentVersion);
-        setModified(true);
-    }
-
-    const updateChoiceText = (choiceIndex: number, value: ChangeEvent) => {
-        let temporaryMCQs = [...temporaryCopyEnrichmentVersion.multipleChoiceQuestions];
-        let temporaryChoices = [
-            ...temporaryCopyEnrichmentVersion.multipleChoiceQuestions[currentMultipleChoiceQuestionIndex].choices
-        ];
-        temporaryChoices[choiceIndex].optionText = value.target['value'];
-        temporaryMCQs[currentMultipleChoiceQuestionIndex].choices = temporaryChoices;
-        setTemporaryCopyEnrichmentVersion({...temporaryCopyEnrichmentVersion, multipleChoiceQuestions: temporaryMCQs})
-        setModified(true);
-    }
-
-    const updateQuestion = (value: ChangeEvent) => {
-        let temporaryMCQs = [...temporaryCopyEnrichmentVersion.multipleChoiceQuestions];
-        temporaryMCQs[currentMultipleChoiceQuestionIndex].question = value.target['value'];
-        setTemporaryCopyEnrichmentVersion({...temporaryCopyEnrichmentVersion, multipleChoiceQuestions: temporaryMCQs});
-        setModified(true);
-    }
-
-    const updateExplanation = (value: ChangeEvent) => {
-        let temporaryMCQs = [...temporaryCopyEnrichmentVersion.multipleChoiceQuestions];
-        temporaryMCQs[currentMultipleChoiceQuestionIndex].explanation = value.target['value'];
-        setTemporaryCopyEnrichmentVersion({...temporaryCopyEnrichmentVersion, multipleChoiceQuestions: temporaryMCQs})
-        setModified(true);
-    }
-
-    const updateTitle = (value: ChangeEvent) => {
-        let temporaryEnrichmentVersionMetadata = {...temporaryCopyEnrichmentVersion.enrichmentVersionMetadata};
-        temporaryEnrichmentVersionMetadata.title = value.target['value'];
-        setTemporaryCopyEnrichmentVersion({...temporaryCopyEnrichmentVersion, enrichmentVersionMetadata: temporaryEnrichmentVersionMetadata});
-        setModified(true);
-    }
-
-    const updateDescription = (value: ChangeEvent) => {
-        let temporaryEnrichmentVersionMetadata = {...temporaryCopyEnrichmentVersion.enrichmentVersionMetadata};
-        temporaryEnrichmentVersionMetadata.description = value.target['value'];
-        setTemporaryCopyEnrichmentVersion({...temporaryCopyEnrichmentVersion, enrichmentVersionMetadata: temporaryEnrichmentVersionMetadata});
-        setModified(true);
-    }
-
-    const updateDiscipline = (option: SelectOption) => {
-        let temporaryEnrichmentVersionMetadata = {...temporaryCopyEnrichmentVersion.enrichmentVersionMetadata};
-        temporaryEnrichmentVersionMetadata.discipline = option.value;
-        setTemporaryCopyEnrichmentVersion({...temporaryCopyEnrichmentVersion, enrichmentVersionMetadata: temporaryEnrichmentVersionMetadata});
-        setModified(true);
-    }
-
-    const updateMediaType = (option: SelectOption) => {
-        let temporaryEnrichmentVersionMetadata = {...temporaryCopyEnrichmentVersion.enrichmentVersionMetadata};
-        temporaryEnrichmentVersionMetadata.mediaType = option.value;
-        setTemporaryCopyEnrichmentVersion({...temporaryCopyEnrichmentVersion, enrichmentVersionMetadata: temporaryEnrichmentVersionMetadata});
-        setModified(true);
-    }
-
-    const updateTopics = (options: SelectOption[]) => {
-        let temporaryEnrichmentVersionMetadata = {...temporaryCopyEnrichmentVersion.enrichmentVersionMetadata};
-        temporaryEnrichmentVersionMetadata.topics = options.map(option => option.value);
-        setTemporaryCopyEnrichmentVersion({...temporaryCopyEnrichmentVersion, enrichmentVersionMetadata: temporaryEnrichmentVersionMetadata});
-        setModified(true);
-    }
-
-    const updateAnswerPointer = (value: string) => {
-        console.log(value);
-        // let temporaryMCQs = [...temporaryCopyEnrichmentVersion.multipleChoiceQuestions];
-        // temporaryMCQs[currentMultipleChoiceQuestionIndex].explanation = value.target['value'];
-        // setTemporaryCopyEnrichmentVersion({...temporaryCopyEnrichmentVersion, multipleChoiceQuestions: temporaryMCQs})
-        // setModified(true);
-    }
-
-    const createNewVersion = () => {
-        setDisableForm(true);
-        const params = new FormData();
-        params.append('multipleChoiceQuestions', JSON.stringify(temporaryCopyEnrichmentVersion.multipleChoiceQuestions));
-        params.append('enrichmentVersionMetadata', JSON.stringify(temporaryCopyEnrichmentVersion.enrichmentVersionMetadata));
-        fetch(Routing.generate('app_create_enrichment_version', {enrichmentId: enrichmentId,}), {
-                method: 'POST',
-                body: params
-            })
-            .then(response => response.json())
-            .then(() => {
-                fetchLatestEnrichmentVersion();
-                fetchEnrichmentVersions();
-                setDisableForm(false);
-                toggleEditModal();
-            }
-        )
-    }
-
-    const mapOptionCallback = (option: string) => {
-        return {
-            value: option,
-            label: option
-        }
     }
 
     const redirectToEvaluationPage = () => {
@@ -431,180 +255,6 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                                 }
                             </tbody>
                         </table>
-
-                        <Modal show={showEditModal} onHide={toggleEditModal} size='xl'>
-                            <Modal.Header closeButton>
-                            <Modal.Title>Modifier</Modal.Title>
-                            </Modal.Header>
-                            <Modal.Body>
-                                <div style={{paddingLeft: '15%', paddingRight: '15%'}}>
-                                    {enrichment? 
-                                        <Form>
-                                            <Form.Group className="mb-3" controlId="title">
-                                                <Form.Label>
-                                                    Titre :
-                                                </Form.Label>
-                                                <Form.Control
-                                                    disabled={disableForm}
-                                                    as="textarea" 
-                                                    rows={1} 
-                                                    defaultValue={temporaryCopyEnrichmentVersion.enrichmentVersionMetadata.title}
-                                                    onChange={updateTitle}
-                                                />
-                                            </Form.Group>
-                                            <Form.Group className="mb-3" controlId="description">
-                                                <Form.Label>
-                                                    Description :
-                                                </Form.Label>
-                                                <Form.Control
-                                                    disabled={disableForm}
-                                                    as="textarea"
-                                                    rows={1}
-                                                    defaultValue={temporaryCopyEnrichmentVersion.enrichmentVersionMetadata.description}
-                                                    onChange={updateDescription}
-                                                />
-                                            </Form.Group>
-                                            <div className='d-flex'>
-                                                <Form.Group className="mb-3 me-3 w-50" controlId="discipline">
-                                                    <Form.Label>Discipline :</Form.Label>
-                                                    <Select
-                                                        components={animatedComponents}
-                                                        defaultValue={mapOptionCallback(temporaryCopyEnrichmentVersion.enrichmentVersionMetadata.discipline)}
-                                                        options={enrichment.disciplines.map(mapOptionCallback)}
-                                                        onChange={updateDiscipline}
-                                                    />
-                                                </Form.Group>
-                                                <Form.Group className="mb-3 w-50" controlId="mediaType">
-                                                    <Form.Label>Type de média :</Form.Label>
-                                                    <Select
-                                                        components={animatedComponents}
-                                                        defaultValue={mapOptionCallback(temporaryCopyEnrichmentVersion.enrichmentVersionMetadata.mediaType)}
-                                                        options={enrichment.mediaTypes.map(mapOptionCallback)}
-                                                        onChange={updateMediaType}
-                                                    />
-                                                </Form.Group>
-                                            </div>
-                                            <Form.Group className="mb-3" controlId="mediaType">
-                                                <Form.Label>Topics :</Form.Label>
-                                                <CreatableSelect
-                                                    className='mb-3'
-                                                    components={animatedComponents}
-                                                    isMulti
-                                                    defaultValue={temporaryCopyEnrichmentVersion.enrichmentVersionMetadata.topics.map(mapOptionCallback)}
-                                                    onChange={updateTopics}
-                                                />
-                                            </Form.Group>
-                                        </Form>
-                                        : null
-                                    }
-                                    <hr className='mt-3'/>
-                                </div>
-                                <Carousel
-                                    activeIndex={currentMultipleChoiceQuestionIndex} 
-                                    onSelect={(selectedIndex) => setCurrentMultipleChoiceQuestionIndex(selectedIndex)}
-                                    variant='dark'
-                                    interval={null}
-                                    indicators={false}
-                                >
-                                    {temporaryCopyEnrichmentVersion.multipleChoiceQuestions ? temporaryCopyEnrichmentVersion.multipleChoiceQuestions.sort(sortMCQs).map(multipleChoiceQuestion =>
-                                            <Carousel.Item key={`mcq-${multipleChoiceQuestion.id}`} style={{paddingLeft: '15%', paddingRight: '15%'}}>
-                                                <Form>
-                                                    <Form.Group className="mb-3" controlId="question">
-                                                        <Form.Label>
-                                                            Question :
-                                                        </Form.Label>
-                                                        <Form.Control
-                                                            disabled={disableForm}
-                                                            as="textarea" 
-                                                            rows={1} 
-                                                            defaultValue={multipleChoiceQuestion.question}
-                                                            onChange={updateQuestion}
-                                                        />
-                                                    </Form.Group>
-                                                    <Form.Group className="mb-3" controlId="explanation">
-                                                        <Form.Label>
-                                                            Explication :
-                                                        </Form.Label>
-                                                        <Form.Control
-                                                            disabled={disableForm}
-                                                            as="textarea"
-                                                            rows={1}
-                                                            defaultValue={multipleChoiceQuestion.explanation}
-                                                            onChange={updateExplanation}
-                                                        />
-                                                    </Form.Group>
-
-                                                    <Form.Group className="mb-3" controlId="explanation">
-                                                        <Form.Label>
-                                                            Pointeur vers la réponse :
-                                                        </Form.Label>
-                                                        <TimePicker 
-                                                            onChange={updateAnswerPointer}
-                                                            disableClock={true}
-                                                            format="HH:mm:ss"
-                                                            maxDetail="second"
-                                                            value={multipleChoiceQuestion.answerPointer?.startAnswerPointer}
-                                                            clockIcon={null}
-                                                        />
-                                                    </Form.Group>
-                                                    <div className='mb-3'>
-                                                        Réponses :
-                                                    </div>
-                                                    {multipleChoiceQuestion.choices.sort(sortChoices).map((choice, index) => 
-                                                        <Form.Group
-                                                            key={`choice-
-                                                                ${choice.id}
-                                                                ${index}-of-
-                                                                ${multipleChoiceQuestion.choices.length}`
-                                                            } 
-                                                            className="mb-3 d-flex align-items-center" controlId={`choice-${index}`}
-                                                        >
-                                                            <Form.Check
-                                                                disabled={disableForm}
-                                                                inline
-                                                                name="correctAnswer"
-                                                                type='radio'
-                                                                checked={choice.correctAnswer}
-                                                                onChange={() => updateChoiceCorrectAnswer(index)}
-                                                            />
-                                                            <Form.Control disabled={disableForm} type="string" defaultValue={choice.optionText} onChange={value => updateChoiceText(index, value)}/>
-                                                            {multipleChoiceQuestion.choices.length > 1 ?
-                                                                <div onClick={() => removeOption(index)}>
-                                                                    <i className="ms-3 fa-solid fa-circle-xmark text-danger" role='button'></i>
-                                                                </div>
-                                                                :
-                                                                <div>
-                                                                    <i className="ms-3 fa-solid fa-circle-xmark text-muted"></i>
-                                                                </div>
-                                                            }
-                                                            
-                                                        </Form.Group>
-                                                    )}
-                                                    <div className='mt-3'>
-                                                        <Button disabled={disableForm} onClick={addOption}>Add option</Button>
-                                                    </div>
-                                                </Form>
-                                            </Carousel.Item>
-                                        )
-                                        : null
-                                    }
-                                </Carousel>
-                            </Modal.Body>
-                            <Modal.Footer className='d-flex'>
-                                <div className='justify-content-end'>
-                                    <Button className='me-3' onClick={() => closeEditModal()} variant='secondary'>Annuler</Button>
-                                    <Button onClick={() => createNewVersion()} disabled={!modified} variant='success'>
-                                        {disableForm ?
-                                            <Spinner animation="border" size="sm" />
-                                            :
-                                            <span>
-                                                Créer une nouvelle version
-                                            </span>
-                                        }
-                                    </Button>
-                                </div>
-                            </Modal.Footer>
-                        </Modal>
                     </div>
                 </div>
                 : null

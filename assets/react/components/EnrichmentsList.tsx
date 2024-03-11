@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Badge, Button, Modal, OverlayTrigger, Spinner, Tooltip } from 'react-bootstrap';
 import { OverlayInjectedProps } from 'react-bootstrap/esm/Overlay';
 import Routing from '../../Routing';
+import Enrichment from '../interfaces/Enrichment';
 import Enrichments from '../interfaces/Enrichments';
 
 interface EnrichmentsListProps {
@@ -22,6 +23,17 @@ const STATUS_TRANSLATION = {
     SUCCESS: 'Succès',
     FAILURE: 'Erreur'
 }
+interface Step {
+    field: string,
+    startDateField: string,
+    endDateField: string,
+    label: string
+}
+const STEPS: Step[] = [
+    {field: 'transcribedBy', startDateField: 'transribingStartedAt', endDateField: 'transribingEndedAt', label: 'Transcrit par :'},
+    {field: 'aiProcessedBy', startDateField: 'aiEnrichmentStartedAt', endDateField: 'aiEnrichmentEndedAt', label: 'Enrichi par :'},
+    {field: 'aiEvaluatedBy', startDateField: 'aiEvaluationStartedAt', endDateField: 'aiEvaluationEndedAt',label: 'Evalué par :'},
+]
 
 const renderTooltip = (props: OverlayInjectedProps) => (
     <Tooltip id="status-tooltip" {...props}>
@@ -39,21 +51,31 @@ const renderTooltip = (props: OverlayInjectedProps) => (
 export default function ({enrichments, fetchEnrichments}: EnrichmentsListProps) {
     moment.locale('fr');
     const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+    const [showStatusModal, setShowStatusModal] = useState<boolean>(false);
     const [disableDeleteButton, setDisableDeleteButton] = useState<boolean>(false);
-    const [currentEnrichmentId, setCurrentEnrichmentId] = useState<string>(null);
+    const [currentEnrichment, setCurrentEnrichment] = useState<Enrichment>(null);
     
-    const toggleDeleteModal = (enrichmentId?: string) => {
-        if (enrichmentId) {
-            setCurrentEnrichmentId(enrichmentId);
+    const toggleDeleteModal = (enrichment?: Enrichment) => {
+        if (enrichment) {
+            setCurrentEnrichment(enrichment);
         } else {
-            setCurrentEnrichmentId(null);
+            setCurrentEnrichment(null);
         }
         setShowDeleteModal(!showDeleteModal);
     }
 
+    const toggleStatusModal = (enrichment?: Enrichment) => {
+        if (enrichment) {
+            setCurrentEnrichment(enrichment);
+        } else {
+            setCurrentEnrichment(null);
+        }
+        setShowStatusModal(!showStatusModal);
+    }
+
     const deleteEnrichment = () => {
         setDisableDeleteButton(true);
-        fetch(Routing.generate('app_delete_enrichment', { enrichmentId: currentEnrichmentId, }), {
+        fetch(Routing.generate('app_delete_enrichment', { enrichmentId: currentEnrichment.id, }), {
             method: 'DELETE',
         })
             .then(response => response.json())
@@ -80,7 +102,7 @@ export default function ({enrichments, fetchEnrichments}: EnrichmentsListProps) 
                                 </div>
                                 <OverlayTrigger
                                     placement="right"
-                                    delay={{ show: 250, hide: 400 }}
+                                    delay={{ show: 400, hide: 1500 }}
                                     overlay={renderTooltip}
                                 >
                                     <div>
@@ -103,9 +125,11 @@ export default function ({enrichments, fetchEnrichments}: EnrichmentsListProps) 
                                     }
                                 </td>
                                 <td className="border-end text-center">
-                                    <Badge 
+                                    <Badge
+                                        role='button'
                                         bg={enrichment.status === 'SUCCESS' ? 'success': enrichment.status === 'FAILURE'? 'danger': 'warning'}
                                         className='my-2'
+                                        onClick={() => toggleStatusModal(enrichment)}
                                     >
                                         {STATUS_TRANSLATION[enrichment.status]}
                                     </Badge>
@@ -116,7 +140,7 @@ export default function ({enrichments, fetchEnrichments}: EnrichmentsListProps) 
                                             <Button href={'enrichments/'+enrichment.id}>Voir</Button> 
                                             : null
                                     }
-                                    <Button className='ms-2' onClick={() => toggleDeleteModal(enrichment.id)}>Supprimer</Button>
+                                    <Button className='ms-2' onClick={() => toggleDeleteModal(enrichment)}>Supprimer</Button>
                                 </td>
                             </tr>
                         ): null
@@ -145,6 +169,51 @@ export default function ({enrichments, fetchEnrichments}: EnrichmentsListProps) 
                     </div>
                 </Modal.Footer>
             </Modal>
+            {currentEnrichment?
+                <Modal show={showStatusModal} onHide={toggleStatusModal} size='lg'>
+                    <Modal.Header closeButton>
+                    <Modal.Title>Informations sur le déroulement de l'enrichissement</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div>
+                            <div className='d-flex mb-2'>
+                                <div className='me-2 fw-bold text-nowrap'>
+                                    ID :
+                                </div>
+                                <div>
+                                    {currentEnrichment.id}
+                                </div>
+                            </div>
+                            {STEPS.map(step =>
+                                currentEnrichment[step.field]?
+                                    <div className='d-flex mb-2' key={`step-${step.field}`}>
+                                        <div className='me-2 fw-bold text-nowrap'>
+                                            {step.label}
+                                        </div>
+                                        <div>
+                                            {currentEnrichment[step.field].name} de {moment(currentEnrichment[step.startDateField]).format('DD/MM/YYYY à HH:mm')} à {currentEnrichment[step.endDateField]? moment(currentEnrichment[step.endDateField]).format('DD/MM/YYYY à HH:mm'): '_____'}
+                                        </div>
+                                    </div>
+                                    : null
+                            )}
+                            {currentEnrichment.failureCause?
+                                <div className='d-flex'>
+                                    <div className='me-2 fw-bold text-nowrap'>
+                                        Erreur :
+                                    </div>
+                                    <div>
+                                        {currentEnrichment.failureCause}
+                                    </div>
+                                </div>
+                                : null
+                            }
+
+                        </div>
+                    </Modal.Body>
+                </Modal>
+                :
+                null
+            }
         </div>
     )
 }

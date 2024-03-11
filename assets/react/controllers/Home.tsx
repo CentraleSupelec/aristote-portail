@@ -1,6 +1,6 @@
 import React, { BaseSyntheticEvent, useEffect, useState } from 'react';
 import Routing from '../../Routing';
-import { Button, Form, Modal, Spinner } from 'react-bootstrap';
+import { Alert, Button, Form, Modal, Spinner } from 'react-bootstrap';
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
 import makeAnimated from "react-select/animated";
@@ -18,6 +18,7 @@ export default function () {
     const [selectedAiModelInfrastructureCombination, setSelectedAiModelInfrastructureCombination] = useState<AiModelInfrastructureCombination>();
     const [selectedEvaluationAi, setSelectedEvaluationAi] = useState<SelectOption>();
     const [showModal, setShowModal] = useState<boolean>(false);
+    const [showAlert, setShowAlert] = useState<boolean>(false);
     const [disableForm, setDisableForm] = useState<boolean>(false);
     const [uploadViaUrl, setUploadViaUrl] = useState<boolean>(true);
 
@@ -57,6 +58,7 @@ export default function () {
     const uploadVideoByUrl = (event: BaseSyntheticEvent) => {
         event.preventDefault();
         setDisableForm(true);
+        setShowAlert(false);
         const enrichmentParameters = {
             mediaTypes: selectedMediaTypes.map(mediaType => mediaType.value),
             disciplines: selectedDisciplines.map(discipline => discipline.value),
@@ -85,11 +87,18 @@ export default function () {
                 })
             })
             .then(response => response.json())
-            .then(data => {
-                fetchEnrichments();
-                setDisableForm(false);
-                toggleModal();
-            })
+            
+            .then(response => {
+                    if (response.status === 200) {
+                        fetchEnrichments();
+                        setDisableForm(false);
+                        toggleModal();
+                    } else {
+                        setDisableForm(false);
+                        setShowAlert(true);
+                    }
+                }
+            )
         } else {
             const file = event.target[2].files[0];
             const params = new FormData();
@@ -101,12 +110,17 @@ export default function () {
                     method: 'POST',
                     body: params
                 })
-                .then(response => response.json())
-                .then(data => {
-                    fetchEnrichments();
-                    setDisableForm(false);
-                    toggleModal();
-                })
+                .then(response => {
+                        if (response.status === 200) {
+                            fetchEnrichments();
+                            setDisableForm(false);
+                            toggleModal();
+                        } else {
+                            setDisableForm(false);
+                            setShowAlert(true);
+                        }
+                    }
+                )
         }
     }
 
@@ -141,6 +155,12 @@ export default function () {
                         <Modal.Title>Créer un enrichissement</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
+                        {showAlert?
+                            <Alert variant='danger' dismissible>
+                                Une erreur s'est produite. Veuillez réessayer.
+                            </Alert>
+                            : null
+                        }
                         <Form onSubmit={uploadVideoByUrl}>
                             <div className='mb-4'>
                                 <Form.Check

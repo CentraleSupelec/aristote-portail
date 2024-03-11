@@ -16,5 +16,8 @@
                 {% block body %}{% endblock %}
             </div>
         </div>
+        {% if showFooter is defined and showFooter %}
+            {% include 'footer.html.twig' %}
+        {% endif %}
     </body>
 </html>
