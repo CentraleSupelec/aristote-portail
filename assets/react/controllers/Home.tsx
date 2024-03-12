@@ -86,8 +86,6 @@ export default function () {
                     enrichmentParameters
                 })
             })
-            .then(response => response.json())
-            
             .then(response => {
                     if (response.status === 200) {
                         fetchEnrichments();
