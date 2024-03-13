@@ -56,6 +56,7 @@ security:
     - { path: "^/admin", roles: ROLE_SUPER_ADMIN }
     - { path: "^/api/webhook", role: PUBLIC_ACCESS }
     - { path: "^/login", role: PUBLIC_ACCESS }
+    - { path: "^/verify/email", role: PUBLIC_ACCESS }
     - { path: "^/register", role: PUBLIC_ACCESS }
     - { path: ^/, role: ROLE_USER }
 
