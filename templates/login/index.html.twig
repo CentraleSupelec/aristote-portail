@@ -2,7 +2,7 @@
 {% set showFooter = true %}
 {% block body %}
     {% for flash_message in app.flashes('success') %}
-        <div class="alert alert-success my-1 mx-3" role="alert">{{ flash_message }}</div>
+        <div class="alert alert-success mt-1 mb-3 mx-3" role="alert">{{ flash_message }}</div>
     {% endfor %}
     <div class='d-flex'>
         <div class='col-lg-2 d-none d-lg-flex align-items-center'>

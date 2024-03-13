@@ -9,21 +9,48 @@
     {% for flash_message in app.flashes('success') %}
         <div class="alert alert-success" role="alert">{{ flash_message }}</div>
     {% endfor %}
-    <div class='px-3'>
-        <h1>Créer un compte</h1>
 
-        {{ form_errors(registrationForm) }}
 
-        {{ form_start(registrationForm) }}
-            {{ form_row(registrationForm.email) }}
-            {{ form_row(registrationForm.plainPassword, {
-                label: 'Mot de passe'
-            }) }}
-
-            <button type="submit" class="btn btn-primary">Créer mon compte</button>
-        {{ form_end(registrationForm) }}
-        <div class='mt-3 d-flex'>
-            Vous avez déjà un compte ?&nbsp; <a class="nav-link link-primary" href="{{ path('app_login') }}">Se connecter ici</a>
+    <div class='d-flex'>
+        <div class='col-lg-2 d-none d-lg-flex align-items-center'>
+            <img
+                class="aristote-logo w-100 opacity-50"
+                src="{{ asset('build/images/aristote.png') }}" 
+            />
         </div>
+        <div class='d-flex flex-column align-items-center col-12 col-lg-8'>
+            <h3 class='fw-bold col-12 ps-3 ps-lg-0 text-center'>
+                Créer un compte
+            </h3>
+            <div class='col-12 d-flex flex-column align-items-center'>
+                <div class='d-flex flex-column align-items-center border rounded m-3 col-9 col-lg-9 shadow'>
+                    {{ form_errors(registrationForm) }}
+
+                    {{ form_start(registrationForm, {attr: {class: 'mt-4 d-flex flex-column col-9'}}) }}
+                    {{ form_row(registrationForm.email, {
+                        attr: {class: 'form-control', autocomplete: 'email'},
+                        label_attr: {class: 'form-label fw-bold my-2'}}) 
+                    }}
+                    {{ form_row(registrationForm.plainPassword, {
+                        attr: {'class': 'form-control'},
+                        label_attr: {class: 'form-label fw-bold my-2'},
+                        label: 'Mot de passe',
+                    }) }}
+                    <div class='d-flex justify-content-center'>
+                        <button type="submit" class="btn btn-primary my-3">Créer mon compte</button>
+                    </div>
+                    {{ form_end(registrationForm) }}
+
+                    <div class='my-3 d-flex'>
+                        Vous avez déjà un compte ?&nbsp;<a class="nav-link link-primary" href="{{ path('app_login') }}">Se connecter</a>
+                    </div>
+                </div>
+            </div>
+            <img
+                class="aristote-logo w-25 opacity-50 pt-4 d-flex d-lg-none"
+                src="{{ asset('build/images/aristote.png') }}" 
+            />
+        </div>
+        <div class='col-lg-2 d-none d-lg-block'></div>
     </div>
 {% endblock %}
