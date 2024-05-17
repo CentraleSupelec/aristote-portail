@@ -78,7 +78,7 @@ docker-compose exec -it php vendor/bin/php-cs-fixer fix -v --dry-run
 
 * Run rector
 ```
-docker-compose exec -it php vendor/bin/rector process --dry-run
+docker-compose exec -it php php vendor/bin/rector process --dry-run
 ```
 
  * Générer une migration :

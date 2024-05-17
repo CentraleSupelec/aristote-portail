@@ -1,4 +1,4 @@
-import React, { BaseSyntheticEvent, useEffect, useState } from 'react';
+import React, { BaseSyntheticEvent, ChangeEvent, ChangeEventHandler, useEffect, useState } from 'react';
 import Routing from '../../Routing';
 import { Alert, Button, Form, Modal, Spinner } from 'react-bootstrap';
 import Select from "react-select";
@@ -11,6 +11,7 @@ import AiModelInfrastructureCombination from '../interfaces/AiModelInfrastructur
 
 export default function () {
     const NOTIFICATION_URL = window.location.origin.replace('localhost', 'host.docker.internal');
+    const MAX_FILE_SIZE = 734003200;
     const [enrichments, setEnrichments] = useState<Enrichments>();
     const [aiModelInfrastructureCombinations, setAiModelInfrastructureCombinations] = useState<AiModelInfrastructureCombination[]>([]);
     const [selectedMediaTypes, setSelectedMediaTypes] = useState<SelectOption[]>([]);
@@ -20,9 +21,18 @@ export default function () {
     const [showModal, setShowModal] = useState<boolean>(false);
     const [showAlert, setShowAlert] = useState<boolean>(false);
     const [disableForm, setDisableForm] = useState<boolean>(false);
+    const [showSpinner, setShowSpinner] = useState<boolean>(false);
     const [uploadViaUrl, setUploadViaUrl] = useState<boolean>(true);
+    const [invalidFile, setInvalidFile] = useState<boolean>(false);
 
-    const toggleModal = () => setShowModal(!showModal);
+    const toggleModal = () => {
+        setShowModal(!showModal);
+        setShowAlert(false);
+        setUploadViaUrl(true);
+        setShowSpinner(false);
+        setDisableForm(false);
+        setInvalidFile(false);
+    };
     const animatedComponents = makeAnimated();
     const mediaTypes: SelectOption[] = [
         {value: 'Conférence', label: 'Conférence'},
@@ -55,9 +65,10 @@ export default function () {
             })
     }
 
-    const uploadVideoByUrl = (event: BaseSyntheticEvent) => {
+    const uploadVideo = (event: BaseSyntheticEvent) => {
         event.preventDefault();
         setDisableForm(true);
+        setShowSpinner(true);
         setShowAlert(false);
         const enrichmentParameters = {
             mediaTypes: selectedMediaTypes.map(mediaType => mediaType.value),
@@ -87,12 +98,12 @@ export default function () {
                 })
             })
             .then(response => {
+                    setDisableForm(false);
+                    setShowSpinner(false);
                     if (response.status === 200) {
                         fetchEnrichments();
-                        setDisableForm(false);
                         toggleModal();
                     } else {
-                        setDisableForm(false);
                         setShowAlert(true);
                     }
                 }
@@ -109,12 +120,12 @@ export default function () {
                     body: params
                 })
                 .then(response => {
+                        setDisableForm(false);
+                        setShowSpinner(false);
                         if (response.status === 200) {
                             fetchEnrichments();
-                            setDisableForm(false);
                             toggleModal();
                         } else {
-                            setDisableForm(false);
                             setShowAlert(true);
                         }
                     }
@@ -142,6 +153,23 @@ export default function () {
         return aiModelInfrastructureCombination.aiModel + '@' + aiModelInfrastructureCombination.infrastructure
     }
 
+    const onFileChange: ChangeEventHandler<HTMLInputElement> = (event: ChangeEvent): void => {
+        const files: FileList = event.target['files'];
+        if (files[0].size > MAX_FILE_SIZE) {
+            setInvalidFile(true);
+            setDisableForm(true);
+        } else {
+            setInvalidFile(false);
+            setDisableForm(false);
+        }
+    }
+
+    const toggleUploadMethod = () => {
+        setUploadViaUrl(!uploadViaUrl);
+        setInvalidFile(false);
+        setDisableForm(false);
+    }
+
     return (
         <div className='d-flex flex-column align-items-center'>
             <div>
@@ -153,13 +181,12 @@ export default function () {
                         <Modal.Title>Créer un enrichissement</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        {showAlert?
+                        {showAlert &&
                             <Alert variant='danger' dismissible>
                                 Une erreur s'est produite. Veuillez réessayer.
                             </Alert>
-                            : null
                         }
-                        <Form onSubmit={uploadVideoByUrl}>
+                        <Form onSubmit={uploadVideo}>
                             <div className='mb-4'>
                                 <Form.Check
                                     inline
@@ -167,7 +194,7 @@ export default function () {
                                     name="uploadType"
                                     type='radio'
                                     checked={uploadViaUrl}
-                                    onChange={() => setUploadViaUrl(true)}
+                                    onChange={toggleUploadMethod}
                                 />
                                 <Form.Check
                                     inline
@@ -175,7 +202,7 @@ export default function () {
                                     name="uploadType"
                                     type='radio'
                                     checked={!uploadViaUrl}
-                                    onChange={() => setUploadViaUrl(false)}
+                                    onChange={toggleUploadMethod}
                                 />
                             </div>
                             {uploadViaUrl? 
@@ -186,7 +213,10 @@ export default function () {
                                 :
                                 <Form.Group className="mb-3" controlId="mediaUpload.file">
                                     <Form.Label>Téléverser le fichier média</Form.Label>
-                                    <Form.Control type="file" />
+                                    <Form.Control type="file" onChange={onFileChange} isInvalid={invalidFile}/>
+                                    <Form.Control.Feedback type="invalid">
+                                        La taille du fichier dépasse la taille maximale de 700 Mo
+                                    </Form.Control.Feedback>
                                 </Form.Group>
                             }
                             <Form.Group className="mb-3" controlId="mediaUpload.aiEvaluation">
@@ -242,7 +272,7 @@ export default function () {
                             </Form.Group>
                             <div className='d-flex justify-content-end'>
                                 <Button id='create-enrichment-button' type='submit' disabled={disableForm}>
-                                    {disableForm ?
+                                    {showSpinner ?
                                         <Spinner animation="border" size="sm" />
                                         :
                                         <span>
@@ -256,7 +286,14 @@ export default function () {
                 </Modal>
             </div>
             <div className='mt-5 w-100'>
-                <EnrichmentsList enrichments={enrichments} fetchEnrichments={fetchEnrichments}></EnrichmentsList>
+                <EnrichmentsList 
+                    enrichments={enrichments}
+                    fetchEnrichments={fetchEnrichments}
+                    availableAIs={availableAIs}
+                    aiModelInfrastructureCombinations={aiModelInfrastructureCombinations}
+                    mediaTypes={mediaTypes}
+                    notificationUrl={NOTIFICATION_URL}
+                />
             </div>
         </div>
     )

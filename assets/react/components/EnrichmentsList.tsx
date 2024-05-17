@@ -1,14 +1,23 @@
 import moment from 'moment';
-import React, { useState } from 'react';
-import { Badge, Button, Modal, OverlayTrigger, Spinner, Tooltip } from 'react-bootstrap';
+import React, { BaseSyntheticEvent, useState } from 'react';
+import { Alert, Badge, Button, Form, Modal, OverlayTrigger, Spinner, Tooltip } from 'react-bootstrap';
 import { OverlayInjectedProps } from 'react-bootstrap/esm/Overlay';
 import Routing from '../../Routing';
+import AiModelInfrastructureCombination from '../interfaces/AiModelInfrastructureCombination';
 import Enrichment from '../interfaces/Enrichment';
 import Enrichments from '../interfaces/Enrichments';
+import SelectOption from '../interfaces/SelectOption';
+import makeAnimated from "react-select/animated";
+import Select from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 
 interface EnrichmentsListProps {
     enrichments: Enrichments,
-    fetchEnrichments: Function
+    fetchEnrichments: Function,
+    availableAIs: SelectOption[],
+    aiModelInfrastructureCombinations: AiModelInfrastructureCombination[],
+    mediaTypes: SelectOption[],
+    notificationUrl: string
 }
 
 const STATUS_TRANSLATION = {
@@ -48,13 +57,93 @@ const renderTooltip = (props: OverlayInjectedProps) => (
     </Tooltip>
 );
 
-export default function ({enrichments, fetchEnrichments}: EnrichmentsListProps) {
+export default function ({enrichments, fetchEnrichments, availableAIs, aiModelInfrastructureCombinations, mediaTypes, notificationUrl}: EnrichmentsListProps) {
     moment.locale('fr');
     const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
     const [showStatusModal, setShowStatusModal] = useState<boolean>(false);
     const [disableDeleteButton, setDisableDeleteButton] = useState<boolean>(false);
     const [currentEnrichment, setCurrentEnrichment] = useState<Enrichment>(null);
+
+    const animatedComponents = makeAnimated();
+    const [selectedMediaTypes, setSelectedMediaTypes] = useState<SelectOption[]>([]);
+    const [selectedDisciplines, setSelectedDisciplines] = useState<SelectOption[]>([]);
+    const [selectedAiModelInfrastructureCombination, setSelectedAiModelInfrastructureCombination] = useState<AiModelInfrastructureCombination>();
+    const [selectedEvaluationAi, setSelectedEvaluationAi] = useState<SelectOption>();
+    const [showModal, setShowModal] = useState<boolean>(false);
+    const [showAlert, setShowAlert] = useState<boolean>(false);
+    const [disableForm, setDisableForm] = useState<boolean>(false);
     
+    const toggleRegenerateModal = (enrichissementIndex?: number) => {
+        if (undefined !== enrichissementIndex) {
+            setCurrentEnrichment(enrichments.content[enrichissementIndex]);
+            setSelectedDisciplines(enrichments.content[enrichissementIndex].disciplines.map(discipline => ({label: discipline, value: discipline})))
+            setSelectedMediaTypes(enrichments.content[enrichissementIndex].mediaTypes.map(discipline => ({label: discipline, value: discipline})))
+            setSelectedEvaluationAi({value: enrichments.content[enrichissementIndex].aiEvaluation, label: enrichments.content[enrichissementIndex].aiEvaluation})
+        }
+        setShowModal(!showModal);
+    };
+
+    const onMediaTypesChange = (newValue: SelectOption[]) => {
+        setSelectedMediaTypes(newValue);
+    }
+
+    const onDisciplinesChange = (newValue: SelectOption[]) => {
+        setSelectedDisciplines(newValue);
+    }
+
+    const onAiChange = (newValue: SelectOption) => {
+        setSelectedEvaluationAi(newValue);
+    }
+
+    const onAiModelInfrastructureCombinationChange = (newValue: AiModelInfrastructureCombination) => {
+        setSelectedAiModelInfrastructureCombination(newValue);
+    }
+
+    const getValue = (aiModelInfrastructureCombination: AiModelInfrastructureCombination) => {
+        return aiModelInfrastructureCombination.aiModel + '@' + aiModelInfrastructureCombination.infrastructure
+    }
+
+
+    const regenerateAiEnrichment = (event: BaseSyntheticEvent) => {
+        event.preventDefault();
+        setDisableForm(true);
+        setShowAlert(false);
+        const enrichmentParameters = {
+            mediaTypes: selectedMediaTypes.map(mediaType => mediaType.value),
+            disciplines: selectedDisciplines.map(discipline => discipline.value),
+        }
+        if (selectedEvaluationAi) {
+            enrichmentParameters['aiEvaluation'] = selectedEvaluationAi.value;
+        }
+
+        enrichmentParameters['aiModel'] = null;
+        enrichmentParameters['infrastructure'] = null;
+
+        if (selectedAiModelInfrastructureCombination) {
+            enrichmentParameters['aiModel'] = selectedAiModelInfrastructureCombination.aiModel;
+            enrichmentParameters['infrastructure'] = selectedAiModelInfrastructureCombination.infrastructure;
+        }
+
+        fetch(Routing.generate('app_create_new_ai_enrichment', {enrichmentId: currentEnrichment.id}), {
+            method: 'POST',
+            body: JSON.stringify({
+                notificationWebhookUrl: notificationUrl + Routing.generate('app_enrichment_notification'),
+                enrichmentParameters
+            })
+        })
+        .then(response => {
+                if (response.status === 200) {
+                    fetchEnrichments();
+                    setDisableForm(false);
+                    toggleRegenerateModal();
+                } else {
+                    setDisableForm(false);
+                    setShowAlert(true);
+                }
+            }
+        )
+    }
+
     const toggleDeleteModal = (enrichment?: Enrichment) => {
         if (enrichment) {
             setCurrentEnrichment(enrichment);
@@ -115,7 +204,7 @@ export default function ({enrichments, fetchEnrichments}: EnrichmentsListProps) 
                     </tr>
                 </thead>
                 <tbody>
-                    {enrichments ? enrichments.content.map(enrichment => 
+                    {enrichments ? enrichments.content.map((enrichment, index) => 
                             <tr className="border-bottom" key={`enrichment-row-${enrichment.id}`}>
                                 <td className="border-end text-center enrichment-id">
                                     {enrichment.media ? 
@@ -134,13 +223,18 @@ export default function ({enrichments, fetchEnrichments}: EnrichmentsListProps) 
                                         {STATUS_TRANSLATION[enrichment.status]}
                                     </Badge>
                                 </td>
-                                <td className="border-end text-center">
-                                    {
-                                        enrichment.status === 'SUCCESS' ? 
-                                            <Button href={'enrichments/'+enrichment.id}>Voir</Button> 
-                                            : null
-                                    }
-                                    <Button className='ms-2' onClick={() => toggleDeleteModal(enrichment)}>Supprimer</Button>
+                                <td className="border-end">
+                                    <div className='d-flex flex-column flex-lg-row justify-content-center align-items-center'>
+                                        {
+                                            enrichment.status === 'SUCCESS' ? 
+                                                <>
+                                                    <Button className='mb-2 mb-lg-0' href={'enrichments/'+enrichment.id}>Voir</Button> 
+                                                    <Button className='ms-2 mb-2 mb-lg-0' onClick={() => toggleRegenerateModal(index)}>Regénérer</Button> 
+                                                </>
+                                                : null
+                                        }
+                                        <Button className='ms-2' onClick={() => toggleDeleteModal(enrichment)}>Supprimer</Button>
+                                    </div>
                                 </td>
                             </tr>
                         ): null
@@ -168,6 +262,85 @@ export default function ({enrichments, fetchEnrichments}: EnrichmentsListProps) 
                         </Button>
                     </div>
                 </Modal.Footer>
+            </Modal>
+            <Modal show={showModal} onHide={toggleRegenerateModal} size='lg'>
+                <Modal.Header closeButton>
+                    <Modal.Title>Regénérer l'enrichissement par IA</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {showAlert?
+                        <Alert variant='danger' dismissible>
+                            Une erreur s'est produite. Veuillez réessayer.
+                        </Alert>
+                        : null
+                    }
+                    <Form onSubmit={regenerateAiEnrichment}>
+                        <Form.Group className="mb-3" controlId="mediaUpload.aiEvaluation">
+                            <Form.Label>Modèle et infrastructure</Form.Label>
+                            <Select
+                                className='mb-3'
+                                components={animatedComponents}
+                                options={aiModelInfrastructureCombinations}
+                                placeholder="Choisissez le modèle qui va enrichir votre média et l'infrastructure sur laquelle il va tourner"
+                                onChange={onAiModelInfrastructureCombinationChange}
+                                getOptionLabel={getValue}
+                                getOptionValue={getValue}
+                                isClearable
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="mediaUpload.aiEvaluation">
+                            <Form.Label>IA d'évaluation</Form.Label>
+                            <Select
+                                className='mb-3'
+                                components={animatedComponents}
+                                options={availableAIs}
+                                placeholder="Choisissez l'IA qui évaluera la proposition d'Aristote"
+                                onChange={onAiChange}
+                                isClearable
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="mediaUpload.disciplines">
+                            <Form.Label className='mb-1'>Disciplines</Form.Label>
+                            <div className='text-black-50 small mb-2'>
+                                Aristote choisira la discipline principale de votre média parmi la liste que vous lui proposez
+                            </div>
+                            <CreatableSelect
+                                className='mb-3'
+                                components={animatedComponents}
+                                isMulti
+                                placeholder='Mathématiques, Sociologie, Chimie, ...'
+                                onChange={onDisciplinesChange}
+                                value={selectedDisciplines}
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="mediaUpload.mediaTypes">
+                            <Form.Label className='mb-1'>Nature du média</Form.Label>
+                            <div className='text-black-50 small mb-2'>
+                                Aristote choisira la nature de votre média parmi la liste que vous lui proposez
+                            </div>
+                            <CreatableSelect
+                                className='mb-3'
+                                components={animatedComponents}
+                                isMulti
+                                options={mediaTypes}
+                                placeholder='Conférence, cours, webinaire, ...'
+                                onChange={onMediaTypesChange}
+                                value={selectedMediaTypes}
+                            />
+                        </Form.Group>
+                        <div className='d-flex justify-content-end'>
+                            <Button id='create-enrichment-button' type='submit' disabled={disableForm}>
+                                {disableForm ?
+                                    <Spinner animation="border" size="sm" />
+                                    :
+                                    <span>
+                                        Regénérer
+                                    </span>
+                                }
+                            </Button>
+                        </div>
+                    </Form>
+                </Modal.Body>
             </Modal>
             {currentEnrichment?
                 <Modal show={showStatusModal} onHide={toggleStatusModal} size='lg'>

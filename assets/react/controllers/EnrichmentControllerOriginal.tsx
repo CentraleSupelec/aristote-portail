@@ -49,7 +49,6 @@ export default function ({enrichmentId} : EnrichmentControllerProps) {
         fetch(Routing.generate('app_latest_enrichment_version', {enrichmentId}))
             .then(response => response.json())
             .then(data => {
-                console.log(data);
                 setEnrichmentVersion(data);
                 setModified(false);
             })
@@ -59,7 +58,6 @@ export default function ({enrichmentId} : EnrichmentControllerProps) {
         fetch(Routing.generate('app_get_enrichment_versions', {enrichmentId}))
             .then(response => response.json())
             .then((data: EnrichmentVersions) => {
-                console.log(data);
                 setEnrichmentVersions(data.content);
             })
     }
@@ -68,7 +66,6 @@ export default function ({enrichmentId} : EnrichmentControllerProps) {
         fetch(Routing.generate('app_get_enrichment_version', {enrichmentId, versionId}))
             .then(response => response.json())
             .then((data: EnrichmentVersion) => {
-                console.log(data);
                 setEnrichmentVersion(data);
             })
     }
@@ -113,7 +110,6 @@ export default function ({enrichmentId} : EnrichmentControllerProps) {
             })
             .then(response => response.json())
             .then((data: EvaluationResponse) => {
-                console.log(data);
                 setEnrichmentVersion(data.enrichmentVersion);
                 setDisableUserFeedbackForm(false);
                 toggleUserFeedbackModal();
@@ -140,7 +136,6 @@ export default function ({enrichmentId} : EnrichmentControllerProps) {
             })
             .then(response => response.json())
             .then((data: EvaluationResponse) => {
-                console.log(data);
                 setEnrichmentVersion(data.enrichmentVersion);
             }
         )
@@ -182,7 +177,6 @@ export default function ({enrichmentId} : EnrichmentControllerProps) {
         temporaryMCQs[currentMultipleChoiceQuestionIndex].choices.push(newChoice);
         let newEnrichmentVersion: EnrichmentVersion = {...enrichmentVersion, multipleChoiceQuestions: temporaryMCQs};
         setEnrichmentVersion(newEnrichmentVersion);
-        console.log(newEnrichmentVersion);
         setModified(true);
     }
 
@@ -195,7 +189,6 @@ export default function ({enrichmentId} : EnrichmentControllerProps) {
         }
         temporaryMCQs[currentMultipleChoiceQuestionIndex].choices = temporaryChoices;
         let newEnrichmentVersion: EnrichmentVersion = {...enrichmentVersion, multipleChoiceQuestions: temporaryMCQs};
-        console.log(newEnrichmentVersion);
         setEnrichmentVersion(newEnrichmentVersion);
         setModified(true);
     }
@@ -210,7 +203,6 @@ export default function ({enrichmentId} : EnrichmentControllerProps) {
             })
             .then(response => response.json())
             .then((data: EvaluationResponse) => {
-                console.log(data);
                 fetchLatestEnrichmentVersion();
                 setModified(false);
             }
@@ -218,8 +210,6 @@ export default function ({enrichmentId} : EnrichmentControllerProps) {
     }
 
     const updateChoiceText = (choiceIndex: number, value: ChangeEvent) => {
-        console.log(value);
-
         let temporaryMCQs = [...enrichmentVersion.multipleChoiceQuestions];
         let temporaryChoices = [
             ...enrichmentVersion.multipleChoiceQuestions[currentMultipleChoiceQuestionIndex].choices

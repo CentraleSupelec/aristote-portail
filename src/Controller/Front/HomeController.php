@@ -22,7 +22,7 @@ class HomeController extends AbstractController
     ) {
     }
 
-    #[Route('/', name: 'app_home')]
+    #[Route('/', name: 'app_home', options: ['expose' => true])]
     public function home(): Response
     {
         return $this->render('home/index.html.twig', [
@@ -99,8 +99,22 @@ class HomeController extends AbstractController
             'headers' => [
                 'Content-Type' => 'multipart/form-data',
             ],
+            'timeout' => 1800,
         ]);
         fclose($fileResource);
+
+        return new JsonResponse($response->toArray());
+    }
+
+    #[Route('/api/enrichments/{enrichmentId}/new_ai_enrichment', name: 'app_create_new_ai_enrichment', options: ['expose' => true], methods: ['POST'])]
+    public function createNewAiEnrichment(string $enrichmentId, Request $request, HttpClientInterface $httpClient): JsonResponse
+    {
+        $user = $this->getUser();
+        $requestBody = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $requestBody['endUserIdentifier'] = $user->getUserIdentifier();
+        $response = $this->aristoteApiService->apiRequestWithToken('POST', sprintf('/enrichments/%s/new_ai_version', $enrichmentId), [
+            'body' => json_encode($requestBody, JSON_THROW_ON_ERROR),
+        ]);
 
         return new JsonResponse($response->toArray());
     }
@@ -110,7 +124,8 @@ class HomeController extends AbstractController
     {
         $response = $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions/latest', $enrichmentId));
         $data = $response->toArray();
-        if (true === $data['initialVersion'] && null === $data['lastEvaluationDate']) {
+        dump($data);
+        if (true === $data['aiGenerated'] && null === $data['lastEvaluationDate']) {
             return $this->redirectToRoute('app_enrichment_evaluate', ['enrichmentId' => $enrichmentId]);
         }
 
