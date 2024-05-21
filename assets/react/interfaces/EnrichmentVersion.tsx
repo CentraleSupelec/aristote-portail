@@ -10,5 +10,6 @@ export default interface EnrichmentVersion {
     multipleChoiceQuestions: MultipleChoiceQuestion[],
     transcript: Transcript,
     initialVersion: boolean,
-    lastEvaluationDate: string
+    lastEvaluationDate: string,
+    aiGenerated: boolean
 }

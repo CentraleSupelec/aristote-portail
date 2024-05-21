@@ -1,11 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { BaseSyntheticEvent, useEffect, useState } from 'react';
 import Routing from '../../Routing';
-import { Badge, Button } from 'react-bootstrap';
+import { Alert, Badge, Button, Form, Modal, OverlayTrigger, Spinner, Tooltip } from 'react-bootstrap';
 import EnrichmentVersion from '../interfaces/EnrichmentVersion';
 import Choice from '../interfaces/Choice';
 import MultipleChoiceQuestion from '../interfaces/MultipleChoiceQuestion';
 import EnrichmentVersions from '../interfaces/EnrichmentVersions';
 import moment from 'moment';
+import { OverlayInjectedProps } from 'react-bootstrap/esm/Overlay';
+import AiModelInfrastructureCombination from '../interfaces/AiModelInfrastructureCombination';
+import SelectOption from '../interfaces/SelectOption';
+import makeAnimated from "react-select/animated";
+import Enrichment from '../interfaces/Enrichment';
+import Select from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 
 interface EnrichmentControllerProps {
     enrichmentId: string,
@@ -14,9 +21,56 @@ interface EnrichmentControllerProps {
 
 export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersion} : EnrichmentControllerProps) {
     moment.locale('fr');
+    const NOTIFICATION_URL = window.location.origin.replace('localhost', 'host.docker.internal');
     const [enrichmentVersion, setEnrichmentVersion] = useState<EnrichmentVersion>();
     const [enrichmentVersions, setEnrichmentVersions] = useState<EnrichmentVersion[]>([]);
-    
+
+    const animatedComponents = makeAnimated();
+    const [selectedMediaTypes, setSelectedMediaTypes] = useState<SelectOption[]>([]);
+    const [selectedDisciplines, setSelectedDisciplines] = useState<SelectOption[]>([]);
+    const [selectedAiModelInfrastructureCombination, setSelectedAiModelInfrastructureCombination] = useState<AiModelInfrastructureCombination>();
+    const [selectedEvaluationAi, setSelectedEvaluationAi] = useState<SelectOption>();
+    const [showModal, setShowModal] = useState<boolean>(false);
+    const [showAlert, setShowAlert] = useState<boolean>(false);
+    const [disableForm, setDisableForm] = useState<boolean>(false);
+    const [aiModelInfrastructureCombinations, setAiModelInfrastructureCombinations] = useState<AiModelInfrastructureCombination[]>([]);
+    const [loadingVersions, setLoadingVersions] = useState<boolean>(true);
+    const [loadingEnrichment, setLoadingEnrichment] = useState<boolean>(true);
+
+    const mediaTypes: SelectOption[] = [
+        {value: 'Conférence', label: 'Conférence'},
+        {value: 'Cours', label: 'Cours'},
+        {value: 'Amphi', label: 'Amphi'}
+    ]
+
+    const availableAIs: SelectOption[] = [
+        {value: 'ChatGPT', label: 'ChatGPT'},
+    ]
+
+    const toggleRegenerateModal = () => {
+        setShowModal(!showModal);
+    };
+
+    const onMediaTypesChange = (newValue: SelectOption[]) => {
+        setSelectedMediaTypes(newValue);
+    }
+
+    const onDisciplinesChange = (newValue: SelectOption[]) => {
+        setSelectedDisciplines(newValue);
+    }
+
+    const onAiChange = (newValue: SelectOption) => {
+        setSelectedEvaluationAi(newValue);
+    }
+
+    const onAiModelInfrastructureCombinationChange = (newValue: AiModelInfrastructureCombination) => {
+        setSelectedAiModelInfrastructureCombination(newValue);
+    }
+
+    const getValue = (aiModelInfrastructureCombination: AiModelInfrastructureCombination) => {
+        return aiModelInfrastructureCombination.aiModel + '@' + aiModelInfrastructureCombination.infrastructure
+    }
+
     const toggleEditModal = () => {
         redirectToCreateNewVersionPage();
     }
@@ -28,11 +82,81 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
         fetchEnrichmentVersions();
     }, [inputEnrichmentVersion]);
 
+    useEffect(() => {
+        if (enrichmentId) {
+            fetchEnrichment();
+            fetchAiModelInfrastructureCombinations();
+        }
+    }, [enrichmentId]);
+
+    const fetchEnrichment = () => {
+        setLoadingEnrichment(true);
+        fetch(Routing.generate('app_get_enrichment', { enrichmentId }))
+            .then(response => response.json())
+            .then((data: Enrichment) => {
+                setSelectedDisciplines(data.disciplines.map(discipline => ({label: discipline, value: discipline})))
+                setSelectedMediaTypes(data.mediaTypes.map(discipline => ({label: discipline, value: discipline})))
+                setSelectedEvaluationAi({value: data.aiEvaluation, label: data.aiEvaluation})
+                setLoadingEnrichment(false);
+            })
+    }
+
+    const regenerateAiEnrichment = (event: BaseSyntheticEvent) => {
+        event.preventDefault();
+        setDisableForm(true);
+        setShowAlert(false);
+        const enrichmentParameters = {
+            mediaTypes: selectedMediaTypes.map(mediaType => mediaType.value),
+            disciplines: selectedDisciplines.map(discipline => discipline.value),
+        }
+        if (selectedEvaluationAi) {
+            enrichmentParameters['aiEvaluation'] = selectedEvaluationAi.value;
+        }
+
+        enrichmentParameters['aiModel'] = null;
+        enrichmentParameters['infrastructure'] = null;
+
+        if (selectedAiModelInfrastructureCombination) {
+            enrichmentParameters['aiModel'] = selectedAiModelInfrastructureCombination.aiModel;
+            enrichmentParameters['infrastructure'] = selectedAiModelInfrastructureCombination.infrastructure;
+        }
+
+        fetch(Routing.generate('app_create_new_ai_enrichment', {enrichmentId}), {
+            method: 'POST',
+            body: JSON.stringify({
+                notificationWebhookUrl: NOTIFICATION_URL + Routing.generate('app_enrichment_notification'),
+                enrichmentParameters
+            })
+        })
+        .then(response => {
+                if (response.status === 200) {
+                    fetchEnrichmentVersions();
+                    setDisableForm(false);
+                    toggleRegenerateModal();
+                    window.location.href = Routing.generate('app_home');
+                } else {
+                    setDisableForm(false);
+                    setShowAlert(true);
+                }
+            }
+        )
+    }
+
+    const fetchAiModelInfrastructureCombinations = () => {
+        fetch(Routing.generate('app_get_ai_model_infrastructure_combinations'))
+            .then(response => response.json())
+            .then((data: AiModelInfrastructureCombination[]) => {
+                setAiModelInfrastructureCombinations(data);
+            })
+    }
+
     const fetchEnrichmentVersions = () => {
+        setLoadingVersions(true);
         fetch(Routing.generate('app_get_enrichment_versions', {enrichmentId}))
             .then(response => response.json())
             .then((data: EnrichmentVersions) => {
                 setEnrichmentVersions(data.content);
+                setLoadingVersions(false);
             })
     }
 
@@ -156,24 +280,55 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
         window.location.href = Routing.generate('app_create_new_version', {enrichmentId});
     }
 
+    const renderTooltip = (props: OverlayInjectedProps) => (
+        <Tooltip id="status-tooltip" {...props}>
+            Généré par Aristote
+        </Tooltip>
+    );
+
     return (
         <div>
             {
                 enrichmentVersion?
                 <div>
                     <div className='d-flex flex-column'>
-                        <div>
-                            <strong>Versions : </strong>
-                            {enrichmentVersions.map((eV, index) => 
-                                <Badge
+                        <div className='d-flex'>
+                            <strong className='pe-2'>Versions :</strong>
+                            {!loadingVersions && enrichmentVersions.map((eV, index) => 
+
+                                <OverlayTrigger
                                     key={`select-version-${eV.id}`}
-                                    bg={eV.id === enrichmentVersion.id ? 'success': 'secondary'}
-                                    className='me-2' role={eV.id !== enrichmentVersion.id ? 'button': ''}
-                                    onClick={() => fetchVersionById(eV.id)}
+                                    placement="top"
+                                    delay={{ show: 100, hide: 100 }}
+                                    overlay={eV.aiGenerated? renderTooltip: <></>}
                                 >
-                                    V{index + 1} {eV.initialVersion? '(Version généré par Aristote)': ''}
+                                    <Badge
+                                        bg={eV.id === enrichmentVersion.id ? 'success': 'secondary'}
+                                        className='me-2 d-flex align-items-center' role={eV.id !== enrichmentVersion.id && eV.enrichmentVersionMetadata !== null ? 'button': ''}
+                                        onClick={() => fetchVersionById(eV.id)}
+                                    >
+                                        <div>
+                                            V{index + 1}
+                                        </div>
+                                        <img className='ps-1' src='/build/images/ai-icon.png' height={20}/>
+                                    </Badge>
+                                </OverlayTrigger>
+                            )}
+                            {!loadingVersions &&
+                                <Badge
+                                    bg='primary'
+                                    className={`me-2 d-flex align-items-center btn btn-primary ${loadingEnrichment? 'disabled' : ''}`} role='button'
+                                    onClick={() => toggleRegenerateModal()}
+                                >
+                                    <div>
+                                        + IA
+                                    </div>
                                 </Badge>
-                            )
+                            }
+                            {loadingVersions &&
+                                <div>
+                                    <Spinner size='sm'></Spinner>
+                                </div>
                             }
                         </div>
                         <div>
@@ -193,7 +348,7 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                             <Button variant='secondary' onClick={downloadMultipleChoiceQuestions}>Télécharger le QCM</Button>
                         </div>
 
-                        {enrichmentVersion.initialVersion? 
+                        {enrichmentVersion.aiGenerated? 
                             <div className='d-flex align-items-center'>
                                 <strong>Date de la dernière évaluation :&nbsp;</strong>
                                 <div className='me-2'>
@@ -260,6 +415,85 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                 : null
             }
             
+            <Modal show={showModal} onHide={toggleRegenerateModal} size='lg'>
+                <Modal.Header closeButton>
+                    <Modal.Title>Regénérer l'enrichissement par IA</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {showAlert?
+                        <Alert variant='danger' dismissible>
+                            Une erreur s'est produite. Veuillez réessayer.
+                        </Alert>
+                        : null
+                    }
+                    <Form onSubmit={regenerateAiEnrichment}>
+                        <Form.Group className="mb-3" controlId="mediaUpload.aiEvaluation">
+                            <Form.Label>Modèle et infrastructure</Form.Label>
+                            <Select
+                                className='mb-3'
+                                components={animatedComponents}
+                                options={aiModelInfrastructureCombinations}
+                                placeholder="Choisissez le modèle qui va enrichir votre média et l'infrastructure sur laquelle il va tourner"
+                                onChange={onAiModelInfrastructureCombinationChange}
+                                getOptionLabel={getValue}
+                                getOptionValue={getValue}
+                                isClearable
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="mediaUpload.aiEvaluation">
+                            <Form.Label>IA d'évaluation</Form.Label>
+                            <Select
+                                className='mb-3'
+                                components={animatedComponents}
+                                options={availableAIs}
+                                placeholder="Choisissez l'IA qui évaluera la proposition d'Aristote"
+                                onChange={onAiChange}
+                                isClearable
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="mediaUpload.disciplines">
+                            <Form.Label className='mb-1'>Disciplines</Form.Label>
+                            <div className='text-black-50 small mb-2'>
+                                Aristote choisira la discipline principale de votre média parmi la liste que vous lui proposez
+                            </div>
+                            <CreatableSelect
+                                className='mb-3'
+                                components={animatedComponents}
+                                isMulti
+                                placeholder='Mathématiques, Sociologie, Chimie, ...'
+                                onChange={onDisciplinesChange}
+                                value={selectedDisciplines}
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="mediaUpload.mediaTypes">
+                            <Form.Label className='mb-1'>Nature du média</Form.Label>
+                            <div className='text-black-50 small mb-2'>
+                                Aristote choisira la nature de votre média parmi la liste que vous lui proposez
+                            </div>
+                            <CreatableSelect
+                                className='mb-3'
+                                components={animatedComponents}
+                                isMulti
+                                options={mediaTypes}
+                                placeholder='Conférence, cours, webinaire, ...'
+                                onChange={onMediaTypesChange}
+                                value={selectedMediaTypes}
+                            />
+                        </Form.Group>
+                        <div className='d-flex justify-content-end'>
+                            <Button id='create-enrichment-button' type='submit' disabled={disableForm}>
+                                {disableForm ?
+                                    <Spinner animation="border" size="sm" />
+                                    :
+                                    <span>
+                                        Regénérer
+                                    </span>
+                                }
+                            </Button>
+                        </div>
+                    </Form>
+                </Modal.Body>
+            </Modal>
         </div>
     )
 }
