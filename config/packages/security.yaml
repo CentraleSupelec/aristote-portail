@@ -58,6 +58,7 @@ security:
     - { path: "^/login", role: PUBLIC_ACCESS }
     - { path: "^/verify/email", role: PUBLIC_ACCESS }
     - { path: "^/register", role: PUBLIC_ACCESS }
+    - { path: "^/keycloak", role: PUBLIC_ACCESS }
     - { path: ^/, role: ROLE_USER }
 
 when@test:

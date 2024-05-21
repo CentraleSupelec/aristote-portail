@@ -124,7 +124,6 @@ class HomeController extends AbstractController
     {
         $response = $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions/latest', $enrichmentId));
         $data = $response->toArray();
-        dump($data);
         if (true === $data['aiGenerated'] && null === $data['lastEvaluationDate']) {
             return $this->redirectToRoute('app_enrichment_evaluate', ['enrichmentId' => $enrichmentId]);
         }

@@ -34,11 +34,14 @@
                             <button class='mt-3 btn btn-primary' type="submit">Connexion</button>
                         </div>
                     </form>
-
+                    {% if keycloakEnabled and keycloakSuggestedIdentityProviderLabel %}
+                        <div class='mt-3 d-flex justify-content-center'>
+                            <a href="{{ path('app_keycloak') }}" class="btn btn-secondary" role="button">Connexion avec {{ keycloakSuggestedIdentityProviderLabel }}</a>
+                        </div>
+                    {% endif %}
                     {% if error %}
                         <div class='mt-3 text-danger'>{{ error.messageKey|trans(error.messageData, 'security') }}</div>
                     {% endif %}
-
                     <div class='my-3 d-flex'>
                         Première connexion ?&nbsp;<a class="nav-link link-primary" href="{{ path('app_register') }}">Créer un compte</a>
                     </div>
