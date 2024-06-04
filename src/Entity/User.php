@@ -56,6 +56,9 @@ class User implements Stringable, UserInterface, PasswordAuthenticatedUserInterf
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private bool $isVerified = false;
 
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $keycloak = false;
+
     public function __toString(): string
     {
         return $this->email ?? 'User';
@@ -162,5 +165,17 @@ class User implements Stringable, UserInterface, PasswordAuthenticatedUserInterf
         $this->isVerified = $isVerified;
 
         return $this;
+    }
+
+    public function setKeycloak(bool $keycloak): self
+    {
+        $this->keycloak = $keycloak;
+
+        return $this;
+    }
+
+    public function getKeycloak(): bool
+    {
+        return $this->keycloak;
     }
 }
