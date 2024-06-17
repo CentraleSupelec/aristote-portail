@@ -27,6 +27,8 @@ const STATUS_TRANSLATION = {
     TRANSCRIBING_MEDIA: 'En cours de transcription',
     WAITING_AI_ENRICHMENT: "En attente de l'enrichissement",
     AI_ENRICHING: "En cours d'enrichissement",
+    WAITING_TRANSLATION: "En attente de traduction",
+    TRANSLATING: "En cours de traduction",
     WAITING_AI_EVALUATION: "En attente d'évaluation",
     AI_EVALUATING: "En cours d'évaluation",
     SUCCESS: 'Succès',
@@ -178,69 +180,82 @@ export default function ({enrichments, fetchEnrichments, availableAIs, aiModelIn
 
     return (
         <div className='table-responsive'>
-            <table className="enrichment-table table table-sm table-borderless table-hover align-middle mb-0 border-bottom">
-                <thead>
-                    <tr className="border-bottom text-center">
-                        <th className="border-end col-4 fw-bold">
-                            Nom du fichier
-                        </th>
-                        <th className="border-end col-4">
-                            <div className='d-flex align-items-center justify-content-center'>
-                                <div className='pe-2'>
-                                    Statut
-                                </div>
-                                <OverlayTrigger
-                                    placement="right"
-                                    delay={{ show: 400, hide: 1500 }}
-                                    overlay={renderTooltip}
-                                >
-                                    <div>
-                                        <i className="fa-solid fa-circle-info text-secondary"></i>
+            {enrichments?.content.length?
+                <table className="enrichment-table table table-sm table-borderless table-hover align-middle mb-0 border-bottom">
+                    <thead>
+                        <tr className="border-bottom text-center">
+                            <th className="border-end col-4 fw-bold">
+                                Nom du fichier
+                            </th>
+                            <th className="border-end col-4">
+                                <div className='d-flex align-items-center justify-content-center'>
+                                    <div className='pe-2'>
+                                        Statut
                                     </div>
-                                </OverlayTrigger>
-                            </div>
-                        </th>
-                        <th className="border-end col-3"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {enrichments ? enrichments.content.map((enrichment, index) => 
-                            <tr className="border-bottom" key={`enrichment-row-${enrichment.id}`}>
-                                <td className="border-end text-center enrichment-id">
-                                    {enrichment.media ? 
-                                        enrichment.media.originalFileName + ' déposé le ' + moment(enrichment.createdAt).format('DD/MM/YYYY à HH:mm')
-                                        :
-                                        '-'
-                                    }
-                                </td>
-                                <td className="border-end text-center">
-                                    <Badge
-                                        role='button'
-                                        bg={enrichment.status === 'SUCCESS' ? 'success': enrichment.status === 'FAILURE'? 'danger': 'warning'}
-                                        className='my-2'
-                                        onClick={() => toggleStatusModal(enrichment)}
+                                    <OverlayTrigger
+                                        placement="right"
+                                        delay={{ show: 400, hide: 1500 }}
+                                        overlay={renderTooltip}
                                     >
-                                        {STATUS_TRANSLATION[enrichment.status]}
-                                    </Badge>
-                                </td>
-                                <td className="border-end">
-                                    <div className='d-flex flex-column flex-lg-row justify-content-center align-items-center'>
-                                        {
-                                            enrichment.status === 'SUCCESS' ? 
-                                                <>
-                                                    <Button className='mb-2 mb-lg-0' href={'enrichments/'+enrichment.id}>Voir</Button> 
-                                                    <Button className='ms-2 mb-2 mb-lg-0' onClick={() => toggleRegenerateModal(index)}>Regénérer</Button> 
-                                                </>
-                                                : null
+                                        <div>
+                                            <i className="fa-solid fa-circle-info text-secondary"></i>
+                                        </div>
+                                    </OverlayTrigger>
+                                </div>
+                            </th>
+                            <th className="border-end col-3"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {enrichments ? enrichments.content.map((enrichment, index) => 
+                                <tr className="border-bottom" key={`enrichment-row-${enrichment.id}`}>
+                                    <td className="border-end text-center enrichment-id">
+                                        {enrichment.media ? 
+                                            enrichment.media.originalFileName + ' déposé le ' + moment(enrichment.createdAt).format('DD/MM/YYYY à HH:mm')
+                                            :
+                                            '-'
                                         }
-                                        <Button className='ms-2' onClick={() => toggleDeleteModal(enrichment)}>Supprimer</Button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ): null
-                    }
-                </tbody>
-            </table>
+                                    </td>
+                                    <td className="border-end text-center">
+                                        <Badge
+                                            role='button'
+                                            bg={enrichment.status === 'SUCCESS' ? 'success': enrichment.status === 'FAILURE'? 'danger': 'warning'}
+                                            className='my-2'
+                                            onClick={() => toggleStatusModal(enrichment)}
+                                        >
+                                            {STATUS_TRANSLATION[enrichment.status]}
+                                        </Badge>
+                                    </td>
+                                    <td className="border-end">
+                                        <div className='d-flex flex-column flex-lg-row justify-content-center align-items-center'>
+                                            {
+                                                enrichment.status === 'SUCCESS' ? 
+                                                    <>
+                                                        <Button className='mb-2 mb-lg-0' href={'enrichments/'+enrichment.id}>Voir</Button> 
+                                                        <Button className='ms-2 mb-2 mb-lg-0' onClick={() => toggleRegenerateModal(index)}>Regénérer</Button> 
+                                                    </>
+                                                    : null
+                                            }
+                                            <Button className='ms-2' onClick={() => toggleDeleteModal(enrichment)}>Supprimer</Button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ): null
+                        }
+                    </tbody>
+                </table>
+                :
+                <div className='d-flex flex-column'>
+                    <div className='pb-4'>
+                        Bienvenue sur l'assistant AristoQuiz.
+                    </div>
+                    <div>
+                        Pour obtenir un quiz généré par l'IA Aristote, envoyez une vidéo en cliquant sur le bouton "Créer un enrichissement".
+                    </div>
+                </div>
+            }
+            
+
             <Modal show={showDeleteModal} onHide={toggleDeleteModal}>
                 <Modal.Header closeButton>
                 <Modal.Title>Supprimer l'enrichissement</Modal.Title>
