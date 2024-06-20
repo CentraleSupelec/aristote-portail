@@ -18,6 +18,8 @@ export default function () {
     const [selectedDisciplines, setSelectedDisciplines] = useState<SelectOption[]>([]);
     const [selectedAiModelInfrastructureCombination, setSelectedAiModelInfrastructureCombination] = useState<AiModelInfrastructureCombination>();
     const [selectedEvaluationAi, setSelectedEvaluationAi] = useState<SelectOption>();
+    const [selectedLanguage, setSelectedLanguage] = useState<SelectOption>();
+    const [selectedTranslateTo, setSelectedTranslateTo] = useState<SelectOption>();
     const [showModal, setShowModal] = useState<boolean>(false);
     const [showAlert, setShowAlert] = useState<boolean>(false);
     const [disableForm, setDisableForm] = useState<boolean>(false);
@@ -32,7 +34,10 @@ export default function () {
         setShowSpinner(false);
         setDisableForm(false);
         setInvalidFile(false);
+        setSelectedLanguage(null);
+        setSelectedTranslateTo(null);
     };
+
     const animatedComponents = makeAnimated();
     const mediaTypes: SelectOption[] = [
         {value: 'Conférence', label: 'Conférence'},
@@ -42,6 +47,11 @@ export default function () {
 
     const availableAIs: SelectOption[] = [
         {value: 'ChatGPT', label: 'ChatGPT'},
+    ]
+
+    const availableLanguagess: SelectOption[] = [
+        {value: 'fr', label: 'Français'},
+        {value: 'en', label: 'Anglais'},
     ]
 
     useEffect(() => {
@@ -74,9 +84,17 @@ export default function () {
             mediaTypes: selectedMediaTypes.map(mediaType => mediaType.value),
             disciplines: selectedDisciplines.map(discipline => discipline.value),
         }
-        if (selectedEvaluationAi) {
-            enrichmentParameters['aiEvaluation'] = selectedEvaluationAi.value;
+        // if (selectedEvaluationAi) {
+        //     enrichmentParameters['aiEvaluation'] = selectedEvaluationAi.value;
+        // }
+
+        if (selectedLanguage) {
+            enrichmentParameters['language'] = selectedLanguage.value;
         }
+
+        // if (selectedTranslateTo) {
+        //     enrichmentParameters['translateTo'] = selectedTranslateTo.value;
+        // }
 
         enrichmentParameters['aiModel'] = null;
         enrichmentParameters['infrastructure'] = null;
@@ -145,6 +163,21 @@ export default function () {
         setSelectedEvaluationAi(newValue);
     }
 
+    const onLanguageChange = (newValue: SelectOption) => {
+        setSelectedLanguage(newValue);
+        if (selectedTranslateTo && newValue.value === selectedTranslateTo.value) {
+            setSelectedTranslateTo(null);
+        }
+    }
+
+    const onTranslateToChange = (newValue: SelectOption) => {
+        console.log(newValue, selectedLanguage)
+        setSelectedTranslateTo(newValue);
+        if (selectedLanguage && newValue.value === selectedLanguage.value) {
+            setSelectedLanguage(null);
+        }
+    }
+
     const onAiModelInfrastructureCombinationChange = (newValue: AiModelInfrastructureCombination) => {
         setSelectedAiModelInfrastructureCombination(newValue);
     }
@@ -207,12 +240,12 @@ export default function () {
                             </div>
                             {uploadViaUrl? 
                                 <Form.Group className="mb-3" controlId="mediaUpload.url">
-                                    <Form.Label>URL du fichier média</Form.Label>
+                                    <Form.Label>URL du fichier média*</Form.Label>
                                     <Form.Control placeholder="Entrez l'URL de votre fichier" type="string" />
                                 </Form.Group>
                                 :
                                 <Form.Group className="mb-3" controlId="mediaUpload.file">
-                                    <Form.Label>Téléverser le fichier média</Form.Label>
+                                    <Form.Label>Téléverser le fichier média*</Form.Label>
                                     <Form.Control type="file" onChange={onFileChange} isInvalid={invalidFile}/>
                                     <Form.Control.Feedback type="invalid">
                                         La taille du fichier dépasse la taille maximale de 700 Mo
@@ -232,7 +265,7 @@ export default function () {
                                     isClearable
                                 />
                             </Form.Group>
-                            <Form.Group className="mb-3" controlId="mediaUpload.aiEvaluation">
+                            {/* <Form.Group className="mb-3" controlId="mediaUpload.aiEvaluation">
                                 <Form.Label>IA d'évaluation</Form.Label>
                                 <Select
                                     className='mb-3'
@@ -242,9 +275,9 @@ export default function () {
                                     onChange={onAiChange}
                                     isClearable
                                 />
-                            </Form.Group>
+                            </Form.Group> */}
                             <Form.Group className="mb-3" controlId="mediaUpload.disciplines">
-                                <Form.Label className='mb-1'>Disciplines</Form.Label>
+                                <Form.Label className='mb-1'>Disciplines*</Form.Label>
                                 <div className='text-black-50 small mb-2'>
                                     Aristote choisira la discipline principale de votre média parmi la liste que vous lui proposez
                                 </div>
@@ -257,7 +290,7 @@ export default function () {
                                 />
                             </Form.Group>
                             <Form.Group className="mb-3" controlId="mediaUpload.mediaTypes">
-                                <Form.Label className='mb-1'>Nature du média</Form.Label>
+                                <Form.Label className='mb-1'>Nature du média*</Form.Label>
                                 <div className='text-black-50 small mb-2'>
                                     Aristote choisira la nature de votre média parmi la liste que vous lui proposez
                                 </div>
@@ -270,6 +303,30 @@ export default function () {
                                     onChange={onMediaTypesChange}
                                 />
                             </Form.Group>
+                            <Form.Group className="mb-3" controlId="mediaUpload.language">
+                                <Form.Label>Langue du média (obligatoire si le fichier est SRT/VTT)</Form.Label>
+                                <Select
+                                    className='mb-3'
+                                    components={animatedComponents}
+                                    options={availableLanguagess}
+                                    placeholder="Vous pouvez spécifier la langue du média"
+                                    onChange={onLanguageChange}
+                                    value={selectedLanguage}
+                                    isClearable
+                                />
+                            </Form.Group>
+                            {/* <Form.Group className="mb-3" controlId="mediaUpload.translateTo">
+                                <Form.Label>Traduire l'enrichissement en :</Form.Label>
+                                <Select
+                                    className='mb-3'
+                                    components={animatedComponents}
+                                    options={availableLanguagess}
+                                    placeholder="Vous pouvez demander la traduction de l'enrichissement"
+                                    onChange={onTranslateToChange}
+                                    value={selectedTranslateTo}
+                                    isClearable
+                                />
+                            </Form.Group> */}
                             <div className='d-flex justify-content-end'>
                                 <Button id='create-enrichment-button' type='submit' disabled={disableForm}>
                                     {showSpinner ?
