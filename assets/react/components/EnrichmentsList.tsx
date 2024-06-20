@@ -254,8 +254,6 @@ export default function ({enrichments, fetchEnrichments, availableAIs, aiModelIn
                     </div>
                 </div>
             }
-            
-
             <Modal show={showDeleteModal} onHide={toggleDeleteModal}>
                 <Modal.Header closeButton>
                 <Modal.Title>Supprimer l'enrichissement</Modal.Title>

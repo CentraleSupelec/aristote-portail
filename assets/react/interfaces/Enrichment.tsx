@@ -20,5 +20,7 @@ export default interface Enrichment {
     aiEvaluationEndedAt?: string,
     aiEvaluationStartedAt?: string,
     transribingEndedAt?: string,
-    transribingStartedAt?: string
+    transribingStartedAt?: string,
+    language?: string,
+    translateTo?: string,
 }
