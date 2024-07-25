@@ -259,11 +259,13 @@ class HomeController extends AbstractController
     {
         $multipleChoiceQuestions = $request->request->get('multipleChoiceQuestions');
         $enrichmentVersionMetadata = $request->request->get('enrichmentVersionMetadata');
+        $translate = $request->request->get('translate');
 
         $response = $this->aristoteApiService->apiRequestWithToken('POST', sprintf('/enrichments/%s/versions', $enrichmentId), [
             'body' => [
                 'enrichmentVersionMetadata' => $enrichmentVersionMetadata,
                 'multipleChoiceQuestions' => $multipleChoiceQuestions,
+                'translate' => 'true' === $translate,
             ],
             'headers' => [
                 'Content-Type' => 'multipart/form-data',

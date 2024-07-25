@@ -79,6 +79,12 @@ body {
     width: 100%;
     padding-top: 20px;
   }
+
+  #language-tabs-container {
+    .nav-link {
+      color: black;
+    }
+  }
 }
 
 @font-face {

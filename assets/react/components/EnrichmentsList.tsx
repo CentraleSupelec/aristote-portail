@@ -10,14 +10,12 @@ import SelectOption from '../interfaces/SelectOption';
 import makeAnimated from "react-select/animated";
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
+import { AVAILABLE_AIS, MEDIA_TYPES, NOTIFICATION_URL } from '../constants';
 
 interface EnrichmentsListProps {
     enrichments: Enrichments,
     fetchEnrichments: Function,
-    availableAIs: SelectOption[],
     aiModelInfrastructureCombinations: AiModelInfrastructureCombination[],
-    mediaTypes: SelectOption[],
-    notificationUrl: string
 }
 
 const STATUS_TRANSLATION = {
@@ -44,6 +42,7 @@ const STEPS: Step[] = [
     {field: 'transcribedBy', startDateField: 'transribingStartedAt', endDateField: 'transribingEndedAt', label: 'Transcrit par :'},
     {field: 'aiProcessedBy', startDateField: 'aiEnrichmentStartedAt', endDateField: 'aiEnrichmentEndedAt', label: 'Enrichi par :'},
     {field: 'aiEvaluatedBy', startDateField: 'aiEvaluationStartedAt', endDateField: 'aiEvaluationEndedAt',label: 'Evalué par :'},
+    {field: 'translatedBy', startDateField: 'translationStartedAt', endDateField: 'translationEndedAt',label: 'Traduit par :'},
 ]
 
 const renderTooltip = (props: OverlayInjectedProps) => (
@@ -59,7 +58,7 @@ const renderTooltip = (props: OverlayInjectedProps) => (
     </Tooltip>
 );
 
-export default function ({enrichments, fetchEnrichments, availableAIs, aiModelInfrastructureCombinations, mediaTypes, notificationUrl}: EnrichmentsListProps) {
+export default function ({enrichments, fetchEnrichments, aiModelInfrastructureCombinations}: EnrichmentsListProps) {
     moment.locale('fr');
     const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
     const [showStatusModal, setShowStatusModal] = useState<boolean>(false);
@@ -129,7 +128,7 @@ export default function ({enrichments, fetchEnrichments, availableAIs, aiModelIn
         fetch(Routing.generate('app_create_new_ai_enrichment', {enrichmentId: currentEnrichment.id}), {
             method: 'POST',
             body: JSON.stringify({
-                notificationWebhookUrl: notificationUrl + Routing.generate('app_enrichment_notification'),
+                notificationWebhookUrl: NOTIFICATION_URL + Routing.generate('app_enrichment_notification'),
                 enrichmentParameters
             })
         })
@@ -306,7 +305,7 @@ export default function ({enrichments, fetchEnrichments, availableAIs, aiModelIn
                             <Select
                                 className='mb-3'
                                 components={animatedComponents}
-                                options={availableAIs}
+                                options={AVAILABLE_AIS}
                                 placeholder="Choisissez l'IA qui évaluera la proposition d'Aristote"
                                 onChange={onAiChange}
                                 isClearable
@@ -335,7 +334,7 @@ export default function ({enrichments, fetchEnrichments, availableAIs, aiModelIn
                                 className='mb-3'
                                 components={animatedComponents}
                                 isMulti
-                                options={mediaTypes}
+                                options={MEDIA_TYPES}
                                 placeholder='Conférence, cours, webinaire, ...'
                                 onChange={onMediaTypesChange}
                                 value={selectedMediaTypes}

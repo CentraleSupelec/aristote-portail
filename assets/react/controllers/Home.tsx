@@ -8,9 +8,9 @@ import Enrichments from '../interfaces/Enrichments';
 import EnrichmentsList from '../components/EnrichmentsList';
 import SelectOption from '../interfaces/SelectOption';
 import AiModelInfrastructureCombination from '../interfaces/AiModelInfrastructureCombination';
+import { AVAILABLE_AIS, AVAILABLE_LANGUAGES, MEDIA_TYPES, NOTIFICATION_URL } from '../constants';
 
 export default function () {
-    const NOTIFICATION_URL = window.location.origin.replace('localhost', 'host.docker.internal');
     const MAX_FILE_SIZE = 734003200;
     const [enrichments, setEnrichments] = useState<Enrichments>();
     const [aiModelInfrastructureCombinations, setAiModelInfrastructureCombinations] = useState<AiModelInfrastructureCombination[]>([]);
@@ -39,20 +39,6 @@ export default function () {
     };
 
     const animatedComponents = makeAnimated();
-    const mediaTypes: SelectOption[] = [
-        {value: 'Conférence', label: 'Conférence'},
-        {value: 'Cours', label: 'Cours'},
-        {value: 'Amphi', label: 'Amphi'}
-    ]
-
-    const availableAIs: SelectOption[] = [
-        {value: 'ChatGPT', label: 'ChatGPT'},
-    ]
-
-    const availableLanguagess: SelectOption[] = [
-        {value: 'fr', label: 'Français'},
-        {value: 'en', label: 'Anglais'},
-    ]
 
     useEffect(() => {
         fetchEnrichments();
@@ -92,9 +78,9 @@ export default function () {
             enrichmentParameters['language'] = selectedLanguage.value;
         }
 
-        // if (selectedTranslateTo) {
-        //     enrichmentParameters['translateTo'] = selectedTranslateTo.value;
-        // }
+        if (selectedTranslateTo) {
+            enrichmentParameters['translateTo'] = selectedTranslateTo.value;
+        }
 
         enrichmentParameters['aiModel'] = null;
         enrichmentParameters['infrastructure'] = null;
@@ -171,7 +157,6 @@ export default function () {
     }
 
     const onTranslateToChange = (newValue: SelectOption) => {
-        console.log(newValue, selectedLanguage)
         setSelectedTranslateTo(newValue);
         if (selectedLanguage && newValue.value === selectedLanguage.value) {
             setSelectedLanguage(null);
@@ -270,7 +255,7 @@ export default function () {
                                 <Select
                                     className='mb-3'
                                     components={animatedComponents}
-                                    options={availableAIs}
+                                    options={AVAILABLE_AIS}
                                     placeholder="Choisissez l'IA qui évaluera la proposition d'Aristote"
                                     onChange={onAiChange}
                                     isClearable
@@ -298,7 +283,7 @@ export default function () {
                                     className='mb-3'
                                     components={animatedComponents}
                                     isMulti
-                                    options={mediaTypes}
+                                    options={MEDIA_TYPES}
                                     placeholder='Conférence, cours, webinaire, ...'
                                     onChange={onMediaTypesChange}
                                 />
@@ -308,25 +293,25 @@ export default function () {
                                 <Select
                                     className='mb-3'
                                     components={animatedComponents}
-                                    options={availableLanguagess}
+                                    options={AVAILABLE_LANGUAGES}
                                     placeholder="Vous pouvez spécifier la langue du média"
                                     onChange={onLanguageChange}
                                     value={selectedLanguage}
                                     isClearable
                                 />
                             </Form.Group>
-                            {/* <Form.Group className="mb-3" controlId="mediaUpload.translateTo">
+                            <Form.Group className="mb-3" controlId="mediaUpload.translateTo">
                                 <Form.Label>Traduire l'enrichissement en :</Form.Label>
                                 <Select
                                     className='mb-3'
                                     components={animatedComponents}
-                                    options={availableLanguagess}
+                                    options={AVAILABLE_LANGUAGES}
                                     placeholder="Vous pouvez demander la traduction de l'enrichissement"
                                     onChange={onTranslateToChange}
                                     value={selectedTranslateTo}
                                     isClearable
                                 />
-                            </Form.Group> */}
+                            </Form.Group>
                             <div className='d-flex justify-content-end'>
                                 <Button id='create-enrichment-button' type='submit' disabled={disableForm}>
                                     {showSpinner ?
@@ -346,10 +331,7 @@ export default function () {
                 <EnrichmentsList 
                     enrichments={enrichments}
                     fetchEnrichments={fetchEnrichments}
-                    availableAIs={availableAIs}
                     aiModelInfrastructureCombinations={aiModelInfrastructureCombinations}
-                    mediaTypes={mediaTypes}
-                    notificationUrl={NOTIFICATION_URL}
                 />
             </div>
         </div>
