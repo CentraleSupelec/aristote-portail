@@ -11,5 +11,7 @@ export default interface EnrichmentVersion {
     transcript: Transcript,
     initialVersion: boolean,
     lastEvaluationDate: string,
-    aiGenerated: boolean
+    aiGenerated: boolean,
+    language: string,
+    translateTo: string
 }

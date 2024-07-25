@@ -13,6 +13,8 @@ import makeAnimated from "react-select/animated";
 import Enrichment from '../interfaces/Enrichment';
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
+import Transcript from '../interfaces/Transcript';
+import { AVAILABLE_AIS, AVAILABLE_LANGUAGES, MEDIA_TYPES } from '../constants';
 
 interface EnrichmentControllerProps {
     enrichmentId: string,
@@ -30,22 +32,14 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
     const [selectedDisciplines, setSelectedDisciplines] = useState<SelectOption[]>([]);
     const [selectedAiModelInfrastructureCombination, setSelectedAiModelInfrastructureCombination] = useState<AiModelInfrastructureCombination>();
     const [selectedEvaluationAi, setSelectedEvaluationAi] = useState<SelectOption>();
+    const [showTranslation, setShowTranslation] = useState<boolean>(false);
+
     const [showModal, setShowModal] = useState<boolean>(false);
     const [showAlert, setShowAlert] = useState<boolean>(false);
     const [disableForm, setDisableForm] = useState<boolean>(false);
     const [aiModelInfrastructureCombinations, setAiModelInfrastructureCombinations] = useState<AiModelInfrastructureCombination[]>([]);
     const [loadingVersions, setLoadingVersions] = useState<boolean>(true);
     const [loadingEnrichment, setLoadingEnrichment] = useState<boolean>(true);
-
-    const mediaTypes: SelectOption[] = [
-        {value: 'Conférence', label: 'Conférence'},
-        {value: 'Cours', label: 'Cours'},
-        {value: 'Amphi', label: 'Amphi'}
-    ]
-
-    const availableAIs: SelectOption[] = [
-        {value: 'ChatGPT', label: 'ChatGPT'},
-    ]
 
     const toggleRegenerateModal = () => {
         setShowModal(!showModal);
@@ -169,35 +163,21 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
     }
 
     const downloadTranscript = () => {
-        downloadJsonObject(enrichmentVersion.transcript, 'trasncript_' + enrichmentVersion.id);
+        downloadObject(JSON.stringify(enrichmentVersion.transcript, null, 2), 'application/json', 'trasncript_' + enrichmentVersion.id + '.json');
     };
 
     const downloadMultipleChoiceQuestions = () => {
         const moodleXML = convertToMoodleXML(enrichmentVersion.multipleChoiceQuestions);
-        downloadXML(moodleXML, 'moodle_quizz' + enrichmentVersion.id);
+        downloadObject(moodleXML, 'application/text', 'moodle_quizz' + enrichmentVersion.id + '.xml')
     };
 
-    const downloadJsonObject = (object: Object, fileName: string) => {
-        const jsonString = JSON.stringify(object, null, 2);
-    
-        const blob = new Blob([jsonString], { type: 'application/json' });
+    const downloadObject = (content: string, type: string, fileName: string) => {    
+        const blob = new Blob([content], { type });
     
         const downloadLink = document.createElement('a');
         downloadLink.href = URL.createObjectURL(blob);
         
-        downloadLink.download = fileName + '.json';
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-    };
-
-    const downloadXML = (xmlString: string, fileName: string) => {    
-        const blob = new Blob([xmlString], { type: 'application/text' });
-    
-        const downloadLink = document.createElement('a');
-        downloadLink.href = URL.createObjectURL(blob);
-        
-        downloadLink.download = fileName + '.xml';
+        downloadLink.download = fileName;
         document.body.appendChild(downloadLink);
         downloadLink.click();
         document.body.removeChild(downloadLink);
@@ -310,7 +290,7 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                                         <div>
                                             V{index + 1}
                                         </div>
-                                        <img className='ps-1' src='/build/images/ai-icon.png' height={20}/>
+                                        {eV.aiGenerated && <img className='ps-1' src='/build/images/ai-icon.png' height={20}/>}
                                     </Badge>
                                 </OverlayTrigger>
                             )}
@@ -331,11 +311,39 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                                 </div>
                             }
                         </div>
+                        {enrichmentVersion && enrichmentVersion.translateTo ?
+                            <div className='d-flex mt-2'>
+                                <strong className='pe-2'>Langue :</strong>
+                                <Badge
+                                    bg={!showTranslation ? 'success': 'secondary'}
+                                    className='me-2 d-flex align-items-center'
+                                    role={showTranslation ? 'button': ''}
+                                    onClick={() => setShowTranslation(false)}
+                                >
+                                    <div>
+                                        {AVAILABLE_LANGUAGES.filter(language => language.value === enrichmentVersion.language)[0]?.label}
+                                    </div>
+                                </Badge>
+
+                                <Badge
+                                    bg={showTranslation ? 'success': 'secondary'}
+                                    className='me-2 d-flex align-items-center'
+                                    role={!showTranslation ? 'button': ''}
+                                    onClick={() => setShowTranslation(true)}
+                                >
+                                    <div>
+                                        {AVAILABLE_LANGUAGES.filter(language => language.value === enrichmentVersion.translateTo)[0]?.label}
+                                    </div>
+                                </Badge>
+                            </div>
+                            : null
+                        }
+
                         <div>
-                            <strong>Titre : </strong>{enrichmentVersion.enrichmentVersionMetadata.title}
+                            <strong>Titre : </strong>{showTranslation? enrichmentVersion.enrichmentVersionMetadata.translatedTitle: enrichmentVersion.enrichmentVersionMetadata.title}
                         </div>
                         <div>
-                            <strong>Description : </strong>{enrichmentVersion.enrichmentVersionMetadata.description}
+                            <strong>Description : </strong>{showTranslation? enrichmentVersion.enrichmentVersionMetadata.translatedDescription: enrichmentVersion.enrichmentVersionMetadata.description}
                         </div>
                         <div>
                             <strong>Discipline : </strong>{enrichmentVersion.enrichmentVersionMetadata.discipline}
@@ -344,7 +352,7 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                             <strong>Nature du média : </strong>{enrichmentVersion.enrichmentVersionMetadata.mediaType}
                         </div>
                         <div className='my-2'>
-                            <Button variant='secondary' className='me-3' onClick={downloadTranscript}>Télécharger la transciption</Button>
+                            <Button variant='secondary' className='me-3' onClick={downloadTranscript}>Télécharger la transcription</Button>
                             <Button variant='secondary' onClick={downloadMultipleChoiceQuestions}>Télécharger le QCM</Button>
                         </div>
 
@@ -384,10 +392,10 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                                 {enrichmentVersion.multipleChoiceQuestions ? enrichmentVersion.multipleChoiceQuestions.sort(sortMCQs).map(multipleChoiceQuestion => 
                                         <tr className="border-bottom" key={`question-row-${multipleChoiceQuestion.id}`}>
                                             <td className="border-end text-center">
-                                                {multipleChoiceQuestion.question}
+                                                {showTranslation? multipleChoiceQuestion.translatedQuestion: multipleChoiceQuestion.question}
                                             </td>
                                             <td className="border-end text-center">
-                                                {multipleChoiceQuestion.explanation}
+                                                {showTranslation? multipleChoiceQuestion.translatedExplanation: multipleChoiceQuestion.explanation}
                                             </td>
                                             <td className="border-end text-center d-flex flex-column">
                                                 {multipleChoiceQuestion.choices? multipleChoiceQuestion.choices.sort(sortChoices).map(choice => 
@@ -398,7 +406,7 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                                                             bg='light'
                                                             className='my-2 me-2 flex-grow-1 text-dark text-wrap'
                                                         >
-                                                            {choice.optionText}
+                                                            {showTranslation? choice.translatedOptionText: choice.optionText}
                                                         </Badge>
                                                     </div>
                                                     )
@@ -445,7 +453,7 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                             <Select
                                 className='mb-3'
                                 components={animatedComponents}
-                                options={availableAIs}
+                                options={AVAILABLE_AIS}
                                 placeholder="Choisissez l'IA qui évaluera la proposition d'Aristote"
                                 onChange={onAiChange}
                                 isClearable
@@ -474,7 +482,7 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                                 className='mb-3'
                                 components={animatedComponents}
                                 isMulti
-                                options={mediaTypes}
+                                options={MEDIA_TYPES}
                                 placeholder='Conférence, cours, webinaire, ...'
                                 onChange={onMediaTypesChange}
                                 value={selectedMediaTypes}

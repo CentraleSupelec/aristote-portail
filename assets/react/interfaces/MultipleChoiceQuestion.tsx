@@ -12,5 +12,8 @@ export default interface MultipleChoiceQuestion {
     choices: Choice[],
     evaluation: Evaluation,
     thumbUp: boolean,
-    userFeedback: string
+    userFeedback: string,
+    questionTouched?: boolean,
+    explanationTouched?: boolean,
+    choicesTouched?: boolean
 }
