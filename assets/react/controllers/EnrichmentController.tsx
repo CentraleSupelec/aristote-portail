@@ -1,6 +1,6 @@
 import React, { BaseSyntheticEvent, useEffect, useState } from 'react';
 import Routing from '../../Routing';
-import { Alert, Badge, Button, Form, Modal, OverlayTrigger, Spinner, Tooltip } from 'react-bootstrap';
+import { Alert, Badge, Button, Form, Modal, Nav, OverlayTrigger, Spinner, Tooltip } from 'react-bootstrap';
 import EnrichmentVersion from '../interfaces/EnrichmentVersion';
 import Choice from '../interfaces/Choice';
 import MultipleChoiceQuestion from '../interfaces/MultipleChoiceQuestion';
@@ -312,29 +312,20 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                             }
                         </div>
                         {enrichmentVersion && enrichmentVersion.translateTo ?
-                            <div className='d-flex mt-2'>
+                            <div className='d-flex mt-2 align-items-center'>
                                 <strong className='pe-2'>Langue :</strong>
-                                <Badge
-                                    bg={!showTranslation ? 'success': 'secondary'}
-                                    className='me-2 d-flex align-items-center'
-                                    role={showTranslation ? 'button': ''}
-                                    onClick={() => setShowTranslation(false)}
-                                >
-                                    <div>
-                                        {AVAILABLE_LANGUAGES.filter(language => language.value === enrichmentVersion.language)[0]?.label}
-                                    </div>
-                                </Badge>
-
-                                <Badge
-                                    bg={showTranslation ? 'success': 'secondary'}
-                                    className='me-2 d-flex align-items-center'
-                                    role={!showTranslation ? 'button': ''}
-                                    onClick={() => setShowTranslation(true)}
-                                >
-                                    <div>
-                                        {AVAILABLE_LANGUAGES.filter(language => language.value === enrichmentVersion.translateTo)[0]?.label}
-                                    </div>
-                                </Badge>
+                                <Nav id='language-tabs-container' variant="tabs" defaultActiveKey="language">
+                                    <Nav.Item>
+                                        <Nav.Link eventKey="language" onClick={() => setShowTranslation(false)}>
+                                            {AVAILABLE_LANGUAGES.filter(language => language.value === enrichmentVersion.language)[0]?.label}
+                                        </Nav.Link>
+                                    </Nav.Item>
+                                    <Nav.Item>
+                                        <Nav.Link eventKey="translateTo" onClick={() => setShowTranslation(true)}>
+                                            {AVAILABLE_LANGUAGES.filter(language => language.value === enrichmentVersion.translateTo)[0]?.label}
+                                        </Nav.Link>
+                                    </Nav.Item>
+                                </Nav>
                             </div>
                             : null
                         }
