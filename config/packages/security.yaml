@@ -22,6 +22,7 @@ security:
     admin:
       pattern: /admin(.*)
       provider: admin
+      context: main
       user_checker: App\Security\UserChecker
       form_login:
         provider: admin
@@ -33,11 +34,13 @@ security:
         path: admin_logout
         target: admin_login
         invalidate_session: true
+      switch_user: { role: ROLE_SUPER_ADMIN, parameter: _switch_user }
       access_denied_url: /admin/login
 
     user:
       pattern: /(.*)
       provider: user
+      context: main
       user_checker: App\Security\UserChecker
       form_login:
         provider: user
@@ -48,6 +51,7 @@ security:
         path: app_logout
         target: app_login
         invalidate_session: true
+      switch_user: { role: ROLE_SUPER_ADMIN, parameter: _switch_user }
       access_denied_url: app_login
 
   access_control:

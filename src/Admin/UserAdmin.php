@@ -10,6 +10,7 @@ use Sonata\AdminBundle\Datagrid\ListMapper;
 use Sonata\AdminBundle\FieldDescription\FieldDescriptionInterface;
 use Sonata\AdminBundle\Form\FormMapper;
 use Sonata\AdminBundle\Form\Type\CollectionType;
+use Sonata\AdminBundle\Route\RouteCollectionInterface;
 use Sonata\AdminBundle\Show\ShowMapper;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
@@ -51,6 +52,9 @@ class UserAdmin extends AbstractAdmin
                     'show' => [],
                     'edit' => [],
                     'delete' => [],
+                    'Prendre la place' => [
+                        'template' => 'sonata/CRUD/list__action_impersonate.html.twig',
+                    ],
                 ],
             ])
         ;
@@ -157,5 +161,11 @@ class UserAdmin extends AbstractAdmin
     private function isCreationForm(): bool
     {
         return !$this->hasSubject() || !$this->getSubject() instanceof User || !$this->getSubject()->getId();
+    }
+
+    protected function configureRoutes(RouteCollectionInterface $collection): void
+    {
+        $collection
+            ->add('admin_impersonate', $this->getRouterIdParameter().'/impersonate');
     }
 }

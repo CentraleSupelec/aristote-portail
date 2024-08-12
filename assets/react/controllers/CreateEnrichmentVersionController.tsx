@@ -28,6 +28,7 @@ export default function ({ enrichmentId, enrichmentVersion: inputEnrichmentVersi
     const [enrichment, setEnrichment] = useState<Enrichment>();
     const [modified, setModified] = useState<boolean>(false);
     const [disableForm, setDisableForm] = useState<boolean>(false);
+    const [translationRequested, setTranslationRequested] = useState<boolean>(false);
     const [metadataOriginalLanguageTab, setMetadataOriginalLanguageTab] = useState<boolean>(true);
     const [questionsOriginalLanguageTab, setQuestionsOriginalLanguageTab] = useState<boolean>(true);
 
@@ -235,6 +236,9 @@ export default function ({ enrichmentId, enrichmentVersion: inputEnrichmentVersi
 
     const createNewVersion = (translate: boolean = false) => {
         setDisableForm(true);
+        if (translate) {
+            setTranslationRequested(true);
+        }
         const params = new FormData();
         params.append('multipleChoiceQuestions', JSON.stringify(enrichmentVersion.multipleChoiceQuestions));
         params.append('enrichmentVersionMetadata', JSON.stringify(enrichmentVersion.enrichmentVersionMetadata));
@@ -446,7 +450,7 @@ export default function ({ enrichmentId, enrichmentVersion: inputEnrichmentVersi
                 }
                 <div className='mt-5 d-flex justify-content-center'>
                     <Button onClick={() => createNewVersion()} disabled={!modified} variant='success'>
-                        {disableForm ?
+                        {disableForm && translationRequested === false ?
                             <Spinner animation="border" size="sm" />
                             :
                             <span>
@@ -460,7 +464,7 @@ export default function ({ enrichmentId, enrichmentVersion: inputEnrichmentVersi
                     enrichmentVersion.translateTo &&
                         <div className='mt-2 d-flex justify-content-center'>
                             <Button onClick={() => createNewVersion(true)} disabled={!modified} variant='success'>
-                                {disableForm ?
+                                {disableForm && translationRequested === true ?
                                     <Spinner animation="border" size="sm" />
                                     :
                                     <span>
