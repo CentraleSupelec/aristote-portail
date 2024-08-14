@@ -15,6 +15,7 @@ import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import Transcript from '../interfaces/Transcript';
 import { AVAILABLE_AIS, AVAILABLE_LANGUAGES, MEDIA_TYPES } from '../constants';
+import AutoResizeTextarea from '../components/AutoResizeTextarea';
 
 interface EnrichmentControllerProps {
     enrichmentId: string,
@@ -275,7 +276,6 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                         <div className='d-flex'>
                             <strong className='pe-2'>Versions :</strong>
                             {!loadingVersions && enrichmentVersions.map((eV, index) => 
-
                                 <OverlayTrigger
                                     key={`select-version-${eV.id}`}
                                     placement="top"
@@ -284,7 +284,7 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                                 >
                                     <Badge
                                         bg={eV.id === enrichmentVersion.id ? 'success': 'secondary'}
-                                        className='me-2 d-flex align-items-center' role={eV.id !== enrichmentVersion.id && eV.enrichmentVersionMetadata !== null ? 'button': ''}
+                                        className='me-2 d-flex align-items-center' role={eV.id !== enrichmentVersion.id ? 'button': ''}
                                         onClick={() => fetchVersionById(eV.id)}
                                     >
                                         <div>
@@ -329,22 +329,38 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                             </div>
                             : null
                         }
-
-                        <div>
-                            <strong>Titre : </strong>{showTranslation? enrichmentVersion.enrichmentVersionMetadata.translatedTitle: enrichmentVersion.enrichmentVersionMetadata.title}
-                        </div>
-                        <div>
-                            <strong>Description : </strong>{showTranslation? enrichmentVersion.enrichmentVersionMetadata.translatedDescription: enrichmentVersion.enrichmentVersionMetadata.description}
-                        </div>
-                        <div>
-                            <strong>Discipline : </strong>{enrichmentVersion.enrichmentVersionMetadata.discipline}
-                        </div>
-                        <div>
-                            <strong>Nature du média : </strong>{enrichmentVersion.enrichmentVersionMetadata.mediaType}
-                        </div>
+                        {enrichmentVersion.enrichmentVersionMetadata &&
+                            <>
+                                <div>
+                                    <strong>Titre : </strong>{showTranslation? enrichmentVersion.enrichmentVersionMetadata.translatedTitle: enrichmentVersion.enrichmentVersionMetadata.title}
+                                </div>
+                                <div>
+                                    <strong>Description : </strong>{showTranslation? enrichmentVersion.enrichmentVersionMetadata.translatedDescription: enrichmentVersion.enrichmentVersionMetadata.description}
+                                </div>
+                                <div>
+                                    <strong>Discipline : </strong>{enrichmentVersion.enrichmentVersionMetadata.discipline}
+                                </div>
+                                <div>
+                                    <strong>Nature du média : </strong>{enrichmentVersion.enrichmentVersionMetadata.mediaType}
+                                </div>
+                            </>
+                        }
+                        {enrichmentVersion.notes &&
+                            <div>
+                                <div>
+                                    <strong>Prise de notes : </strong>
+                                </div>
+                                <AutoResizeTextarea
+                                    disabled={true}
+                                    value={showTranslation? enrichmentVersion.translatedNotes: enrichmentVersion.notes}
+                                />
+                            </div>
+                        }
                         <div className='my-2'>
                             <Button variant='secondary' className='me-3' onClick={downloadTranscript}>Télécharger la transcription</Button>
-                            <Button variant='secondary' onClick={downloadMultipleChoiceQuestions}>Télécharger le QCM</Button>
+                            {enrichmentVersion.multipleChoiceQuestions && enrichmentVersion.multipleChoiceQuestions.length > 0 &&
+                                <Button variant='secondary' onClick={downloadMultipleChoiceQuestions}>Télécharger le QCM</Button>
+                            }
                         </div>
 
                         {enrichmentVersion.aiGenerated? 
@@ -363,53 +379,54 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                             <Button onClick={toggleEditModal}>Modifier</Button>
                         </div>
                     </div>
+                    {enrichmentVersion.multipleChoiceQuestions && enrichmentVersion.multipleChoiceQuestions.length > 0 &&
+                        <div className='table-responsive table-striped mt-5'>
+                            <table className="enrichment-table table table-sm table-borderless table-hover align-middle mb-0 border-bottom">
+                                <thead>
+                                    <tr className="border-bottom text-center">
+                                        <th className="border-end col-3">
+                                            Question
+                                        </th>
+                                        <th className="border-end col-3">
+                                            Explication
+                                        </th>
+                                        <th className="border-end col-6">
+                                            Réponses
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {enrichmentVersion.multipleChoiceQuestions.sort(sortMCQs).map(multipleChoiceQuestion => 
+                                            <tr className="border-bottom" key={`question-row-${multipleChoiceQuestion.id}`}>
+                                                <td className="border-end text-center">
+                                                    {showTranslation? multipleChoiceQuestion.translatedQuestion: multipleChoiceQuestion.question}
+                                                </td>
+                                                <td className="border-end text-center">
+                                                    {showTranslation? multipleChoiceQuestion.translatedExplanation: multipleChoiceQuestion.explanation}
+                                                </td>
+                                                <td className="border-end text-center d-flex flex-column">
+                                                    {multipleChoiceQuestion.choices? multipleChoiceQuestion.choices.sort(sortChoices).map(choice => 
+                                                        <div key={`choice-${choice.id}`} className='d-flex align-items-center'>
+                                                            <i className={`me-2 ${choice.correctAnswer? 'fa-solid fa-check text-success' : 'fa-solid fa-xmark text-danger'}`}></i>
+                                                            <Badge
+                                                                key={`choice-${choice.id}`}
+                                                                bg='light'
+                                                                className='my-2 me-2 flex-grow-1 text-dark text-wrap'
+                                                            >
+                                                                {showTranslation? choice.translatedOptionText: choice.optionText}
+                                                            </Badge>
+                                                        </div>
+                                                        )
+                                                    : null}
+                                                </td>
+                                            </tr>
 
-                    <div className='table-responsive table-striped mt-5'>
-                        <table className="enrichment-table table table-sm table-borderless table-hover align-middle mb-0 border-bottom">
-                            <thead>
-                                <tr className="border-bottom text-center">
-                                    <th className="border-end col-3">
-                                        Question
-                                    </th>
-                                    <th className="border-end col-3">
-                                        Explication
-                                    </th>
-                                    <th className="border-end col-6">
-                                        Réponses
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {enrichmentVersion.multipleChoiceQuestions ? enrichmentVersion.multipleChoiceQuestions.sort(sortMCQs).map(multipleChoiceQuestion => 
-                                        <tr className="border-bottom" key={`question-row-${multipleChoiceQuestion.id}`}>
-                                            <td className="border-end text-center">
-                                                {showTranslation? multipleChoiceQuestion.translatedQuestion: multipleChoiceQuestion.question}
-                                            </td>
-                                            <td className="border-end text-center">
-                                                {showTranslation? multipleChoiceQuestion.translatedExplanation: multipleChoiceQuestion.explanation}
-                                            </td>
-                                            <td className="border-end text-center d-flex flex-column">
-                                                {multipleChoiceQuestion.choices? multipleChoiceQuestion.choices.sort(sortChoices).map(choice => 
-                                                    <div key={`choice-${choice.id}`} className='d-flex align-items-center'>
-                                                        <i className={`me-2 ${choice.correctAnswer? 'fa-solid fa-check text-success' : 'fa-solid fa-xmark text-danger'}`}></i>
-                                                        <Badge
-                                                            key={`choice-${choice.id}`}
-                                                            bg='light'
-                                                            className='my-2 me-2 flex-grow-1 text-dark text-wrap'
-                                                        >
-                                                            {showTranslation? choice.translatedOptionText: choice.optionText}
-                                                        </Badge>
-                                                    </div>
-                                                    )
-                                                : null}
-                                            </td>
-                                        </tr>
-
-                                    ): null
-                                }
-                            </tbody>
-                        </table>
-                    </div>
+                                        )
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
                 </div>
                 : null
             }
