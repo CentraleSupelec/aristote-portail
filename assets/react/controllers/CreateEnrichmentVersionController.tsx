@@ -15,6 +15,7 @@ import 'react-time-picker/dist/TimePicker.css';
 import 'react-clock/dist/Clock.css';
 import AutoResizeTextarea from '../components/AutoResizeTextarea';
 import { AVAILABLE_LANGUAGES } from '../constants';
+import ErrorsResponse from '../interfaces/ErrorsResponse';
 
 interface EnrichmentControllerProps {
     enrichmentId: string,
@@ -28,7 +29,9 @@ export default function ({ enrichmentId, enrichmentVersion: inputEnrichmentVersi
     const [enrichment, setEnrichment] = useState<Enrichment>();
     const [modified, setModified] = useState<boolean>(false);
     const [disableForm, setDisableForm] = useState<boolean>(false);
+    const [translationRequested, setTranslationRequested] = useState<boolean>(false);
     const [metadataOriginalLanguageTab, setMetadataOriginalLanguageTab] = useState<boolean>(true);
+    const [notesOriginalLanguageTab, setNotesOriginalLanguageTab] = useState<boolean>(true);
     const [questionsOriginalLanguageTab, setQuestionsOriginalLanguageTab] = useState<boolean>(true);
 
     useEffect(() => {
@@ -191,6 +194,15 @@ export default function ({ enrichmentId, enrichmentVersion: inputEnrichmentVersi
         setModified(true);
     }
 
+    const updateNotes = (value: ChangeEvent) => {
+        if (notesOriginalLanguageTab) {
+            setEnrichmentVersion({ ...enrichmentVersion, notes: value.target['value']})
+        } else {
+            setEnrichmentVersion({ ...enrichmentVersion, translatedNotes: value.target['value']})
+        }
+        setModified(true);
+    }
+
     const updateAnswerPointer = (mcqIndex: number, value: string) => {
         let temporaryMCQs = [...enrichmentVersion.multipleChoiceQuestions];
         temporaryMCQs[mcqIndex].answerPointer.startAnswerPointer = value;
@@ -235,23 +247,47 @@ export default function ({ enrichmentId, enrichmentVersion: inputEnrichmentVersi
 
     const createNewVersion = (translate: boolean = false) => {
         setDisableForm(true);
+        if (translate) {
+            setTranslationRequested(true);
+        }
         const params = new FormData();
-        params.append('multipleChoiceQuestions', JSON.stringify(enrichmentVersion.multipleChoiceQuestions));
-        params.append('enrichmentVersionMetadata', JSON.stringify(enrichmentVersion.enrichmentVersionMetadata));
+
+        if (enrichmentVersion.multipleChoiceQuestions && enrichmentVersion.multipleChoiceQuestions.length > 0) {
+            params.append('multipleChoiceQuestions', JSON.stringify(enrichmentVersion.multipleChoiceQuestions));
+        }
+
+        if (enrichmentVersion.enrichmentVersionMetadata) {
+            params.append('enrichmentVersionMetadata', JSON.stringify(enrichmentVersion.enrichmentVersionMetadata));
+        }
+
+        if (enrichmentVersion.notes) {
+            params.append('notes', enrichmentVersion.notes);
+        }
+
+        if (enrichmentVersion.translatedNotes) {
+            params.append('translatedNotes', enrichmentVersion.translatedNotes);
+        }
         params.append('translate', translate? 'true': 'false');
         fetch(Routing.generate('app_create_enrichment_version', { enrichmentId: enrichmentId, }), {
                 method: 'POST',
                 body: params
             })
-            .then(response => response.json())
-            .then(() => {
-                    if (translate) {
-                        window.location.href = Routing.generate('app_home');
+
+            .then(response => {
+                    if (response.status === 200) {
+                        if (translate) {
+                            window.location.href = Routing.generate('app_home');
+                        } else {
+                            window.location.href = Routing.generate('app_enrichment', { enrichmentId });
+                        }
                     } else {
-                        window.location.href = Routing.generate('app_enrichment', { enrichmentId });
+                        return response.json()
                     }
                 }
-            )
+            ).then((errorsResponse: ErrorsResponse) => {
+                setDisableForm(false);
+                console.log(errorsResponse.errors)
+            })
     }
 
     const mapOptionCallback = (option: string) => {
@@ -320,6 +356,27 @@ export default function ({ enrichmentId, enrichmentVersion: inputEnrichmentVersi
                         </Form>
                         : null
                     }
+                </Card.Body>
+            </Card>
+        )
+    }
+
+    const notesBlock = (tab: string = 'language') => {
+        return(
+            <Card className='mb-1'>
+                <Card.Body>
+                        <Form>
+                            <Form.Group className="mb-3" controlId="title">
+                                <Form.Label>
+                                    Notes :
+                                </Form.Label>
+                                <AutoResizeTextarea
+                                    disabled={disableForm}
+                                    defaultValue={tab === 'language'? enrichmentVersion.notes: enrichmentVersion.translatedNotes}
+                                    onChange={updateNotes}
+                                />
+                            </Form.Group>
+                        </Form>
                 </Card.Body>
             </Card>
         )
@@ -444,32 +501,6 @@ export default function ({ enrichmentId, enrichmentVersion: inputEnrichmentVersi
                         <Button disabled={disableForm} onClick={addMultipleChoiceQuestion}>Ajouter une question</Button>
                     </div>
                 }
-                <div className='mt-5 d-flex justify-content-center'>
-                    <Button onClick={() => createNewVersion()} disabled={!modified} variant='success'>
-                        {disableForm ?
-                            <Spinner animation="border" size="sm" />
-                            :
-                            <span>
-                                Créer une nouvelle version
-                            </span>
-                        }
-                    </Button>
-                </div>
-
-                {
-                    enrichmentVersion.translateTo &&
-                        <div className='mt-2 d-flex justify-content-center'>
-                            <Button onClick={() => createNewVersion(true)} disabled={!modified} variant='success'>
-                                {disableForm ?
-                                    <Spinner animation="border" size="sm" />
-                                    :
-                                    <span>
-                                        Créer une nouvelle version et une nouvelle traduction
-                                    </span>
-                                }
-                            </Button>
-                        </div>
-                }
             </>
         )
     }
@@ -479,32 +510,79 @@ export default function ({ enrichmentId, enrichmentVersion: inputEnrichmentVersi
             {
                 enrichmentVersion && enrichment ?
                     <div style={{ paddingLeft: '15%', paddingRight: '15%' }} id='language-tabs-container'>
-                        {
-                            enrichmentVersion.translateTo ?
-                                <Tabs defaultActiveKey='language' onSelect={() => setMetadataOriginalLanguageTab(!metadataOriginalLanguageTab)}>
-                                    {
-                                        ['language', 'translateTo'].map(tab =>
-                                            <Tab mountOnEnter key={tab} title={AVAILABLE_LANGUAGES.find(language => language.value == enrichmentVersion[tab]).label} eventKey={tab}>
-                                                {metadataBlock(tab)}
-                                            </Tab>
-                                        )
-                                    }
-                                </Tabs>
-                                : metadataBlock()
-                        }
-                        {
-                            enrichmentVersion.translateTo ?
-
-                                <Tabs className='mt-5' defaultActiveKey='language' onSelect={() => setQuestionsOriginalLanguageTab(!questionsOriginalLanguageTab)}>
-                                    {
-                                        ['language', 'translateTo'].map(tab =>
-                                            <Tab mountOnEnter key={tab} title={AVAILABLE_LANGUAGES.find(language => language.value == enrichmentVersion[tab]).label} eventKey={tab}>
-                                                {questionsBlock(tab)}
-                                            </Tab>
-                                        )
+                        {enrichmentVersion.enrichmentVersionMetadata &&
+                            (
+                                enrichmentVersion.translateTo ?
+                                    <Tabs defaultActiveKey='language' onSelect={() => setMetadataOriginalLanguageTab(!metadataOriginalLanguageTab)}>
+                                        {
+                                            ['language', 'translateTo'].map(tab =>
+                                                <Tab mountOnEnter key={tab} title={AVAILABLE_LANGUAGES.find(language => language.value == enrichmentVersion[tab]).label} eventKey={tab}>
+                                                    {metadataBlock(tab)}
+                                                </Tab>
+                                            )
                                         }
-                                </Tabs>
-                                : questionsBlock()
+                                    </Tabs>
+                                    : metadataBlock()
+                            )
+                        }
+
+                        {enrichmentVersion.notes &&
+                            (
+                                enrichmentVersion.translateTo ?
+                                    <Tabs defaultActiveKey='language' onSelect={() => setNotesOriginalLanguageTab(!notesOriginalLanguageTab)}>
+                                        {
+                                            ['language', 'translateTo'].map(tab =>
+                                                <Tab mountOnEnter key={tab} title={AVAILABLE_LANGUAGES.find(language => language.value == enrichmentVersion[tab]).label} eventKey={tab}>
+                                                    {notesBlock(tab)}
+                                                </Tab>
+                                            )
+                                        }
+                                    </Tabs>
+                                    : notesBlock()
+                            )
+                        }
+
+                        {enrichmentVersion.multipleChoiceQuestions && enrichmentVersion.multipleChoiceQuestions.length > 0 &&
+                            (
+                                enrichmentVersion.translateTo ?
+                                    <Tabs className='mt-5' defaultActiveKey='language' onSelect={() => setQuestionsOriginalLanguageTab(!questionsOriginalLanguageTab)}>
+                                        {
+                                            ['language', 'translateTo'].map(tab =>
+                                                <Tab mountOnEnter key={tab} title={AVAILABLE_LANGUAGES.find(language => language.value == enrichmentVersion[tab]).label} eventKey={tab}>
+                                                    {questionsBlock(tab)}
+                                                </Tab>
+                                            )
+                                            }
+                                    </Tabs>
+                                    : questionsBlock()
+                            )
+                        }
+
+                        <div className='mt-5 d-flex justify-content-center'>
+                            <Button onClick={() => createNewVersion()} disabled={!modified} variant='success'>
+                                {disableForm && translationRequested === false ?
+                                    <Spinner animation="border" size="sm" />
+                                    :
+                                    <span>
+                                        Créer une nouvelle version
+                                    </span>
+                                }
+                            </Button>
+                        </div>
+
+                        {
+                            enrichmentVersion.translateTo &&
+                                <div className='mt-2 d-flex justify-content-center'>
+                                    <Button onClick={() => createNewVersion(true)} disabled={!modified} variant='success'>
+                                        {disableForm && translationRequested === true ?
+                                            <Spinner animation="border" size="sm" />
+                                            :
+                                            <span>
+                                                Créer une nouvelle version et une nouvelle traduction
+                                            </span>
+                                        }
+                                    </Button>
+                                </div>
                         }
                     </div>
                     : null

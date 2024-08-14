@@ -8,6 +8,7 @@ use DateInterval;
 use DateTime;
 use Exception;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
@@ -52,7 +53,8 @@ class AristoteApiService
         int $maxRetries = 1,
         int $retryDelayMs = 250,
         array $successCodes = [Response::HTTP_OK],
-    ): ResponseInterface|null {
+    ): JsonResponse|null {
+        $response = null;
         $versionedUri = preg_match('/^\/api\/v(\d+\.\d+)/', $uri) ? $uri : sprintf('/api/v1%s', $uri);
 
         $prefixedVersionedUri = $this->uriPrefix.$versionedUri;
@@ -73,13 +75,7 @@ class AristoteApiService
                 $options['headers']['Authorization'] = sprintf('Bearer %s', $this->token);
 
                 $response = $this->httpClient->request($method, $prefixedVersionedUri, $options);
-
-                if (!in_array($response->getStatusCode(), $successCodes)) {
-                    $errors = $response->toArray(false)['errors'] ?? [];
-                    throw new AristoteApiException(sprintf('Errors returned by Aristote API :[ %s ]', implode(', ', $errors)));
-                } else {
-                    $success = true;
-                }
+                $success = true;
             } catch (AristoteApiException|TransportExceptionInterface $exception) {
                 $this->logger->error(sprintf('Error while requesting AristoteApi: %s', $exception));
 
@@ -97,7 +93,7 @@ class AristoteApiService
             }
         } while ($retry);
 
-        return $response ?? null;
+        return $response instanceof ResponseInterface ? new JsonResponse($response->toArray(false), $response->getStatusCode()) : null;
     }
 
     /**

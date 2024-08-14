@@ -8,7 +8,9 @@ import Enrichments from '../interfaces/Enrichments';
 import EnrichmentsList from '../components/EnrichmentsList';
 import SelectOption from '../interfaces/SelectOption';
 import AiModelInfrastructureCombination from '../interfaces/AiModelInfrastructureCombination';
-import { AVAILABLE_AIS, AVAILABLE_LANGUAGES, MEDIA_TYPES, NOTIFICATION_URL } from '../constants';
+import { AVAILABLE_AIS, AVAILABLE_LANGUAGES, AVAILABLE_TREATMENTS, DEFAULT_TREATMENTS, MEDIA_TYPES, NOTIFICATION_URL, TREATMENT_METADATA, TREATMENT_NOTES, TREATMENT_QUIZ } from '../constants';
+import ErrorsResponse from '../interfaces/ErrorsResponse';
+import Error from '../interfaces/Error';
 
 export default function () {
     const MAX_FILE_SIZE = 734003200;
@@ -17,6 +19,7 @@ export default function () {
     const [selectedMediaTypes, setSelectedMediaTypes] = useState<SelectOption[]>([]);
     const [selectedDisciplines, setSelectedDisciplines] = useState<SelectOption[]>([]);
     const [selectedAiModelInfrastructureCombination, setSelectedAiModelInfrastructureCombination] = useState<AiModelInfrastructureCombination>();
+    const [selectedTreatments, setSelectedTreatments] = useState<SelectOption[]>(DEFAULT_TREATMENTS);
     const [selectedEvaluationAi, setSelectedEvaluationAi] = useState<SelectOption>();
     const [selectedLanguage, setSelectedLanguage] = useState<SelectOption>();
     const [selectedTranslateTo, setSelectedTranslateTo] = useState<SelectOption>();
@@ -25,7 +28,7 @@ export default function () {
     const [disableForm, setDisableForm] = useState<boolean>(false);
     const [showSpinner, setShowSpinner] = useState<boolean>(false);
     const [uploadViaUrl, setUploadViaUrl] = useState<boolean>(true);
-    const [invalidFile, setInvalidFile] = useState<boolean>(false);
+    const [errors, setErrors] = useState<Error[]>([]);
 
     const toggleModal = () => {
         setShowModal(!showModal);
@@ -33,9 +36,9 @@ export default function () {
         setUploadViaUrl(true);
         setShowSpinner(false);
         setDisableForm(false);
-        setInvalidFile(false);
         setSelectedLanguage(null);
         setSelectedTranslateTo(null);
+        setErrors([])
     };
 
     const animatedComponents = makeAnimated();
@@ -69,7 +72,23 @@ export default function () {
         const enrichmentParameters = {
             mediaTypes: selectedMediaTypes.map(mediaType => mediaType.value),
             disciplines: selectedDisciplines.map(discipline => discipline.value),
+            generateMetadata: false,
+            generateQuiz: false,
+            generateNotes: false
         }
+
+        if (selectedTreatments.filter(treatment => treatment.value === TREATMENT_METADATA).length !== 0) {
+            enrichmentParameters.generateMetadata = true;
+        }
+
+        if (selectedTreatments.filter(treatment => treatment.value === TREATMENT_QUIZ).length !== 0) {
+            enrichmentParameters.generateQuiz = true;
+        }
+
+        if (selectedTreatments.filter(treatment => treatment.value === TREATMENT_NOTES).length !== 0) {
+            enrichmentParameters.generateNotes = true;
+        }
+
         // if (selectedEvaluationAi) {
         //     enrichmentParameters['aiEvaluation'] = selectedEvaluationAi.value;
         // }
@@ -109,9 +128,15 @@ export default function () {
                         toggleModal();
                     } else {
                         setShowAlert(true);
+                        return response.json()
                     }
                 }
-            )
+            ).then((errorsResponse: ErrorsResponse) => { 
+                console.log(errorsResponse)
+                if (errorsResponse) {
+                    setErrors(errorsResponse.errors)
+                }
+            })
         } else {
             const file = event.target[2].files[0];
             const params = new FormData();
@@ -131,9 +156,15 @@ export default function () {
                             toggleModal();
                         } else {
                             setShowAlert(true);
+                            return response.json()
                         }
                     }
-                )
+                ).then((errorsResponse: ErrorsResponse) => {  
+                    console.log(errorsResponse)
+                    if (errorsResponse) {
+                        setErrors(errorsResponse.errors)
+                    }
+                })
         }
     }
 
@@ -167,24 +198,38 @@ export default function () {
         setSelectedAiModelInfrastructureCombination(newValue);
     }
 
+    const onTreatmentChange = (newValue: SelectOption[]) => {
+        if (newValue.length === 0) {
+            setSelectedTreatments(newValue)
+        } else if (newValue[newValue.length - 1].value === TREATMENT_NOTES) {
+            setSelectedTreatments([newValue[newValue.length - 1]]);
+        } else {
+            let treatmentNotesIndex = newValue.findIndex(treatment => treatment.value === TREATMENT_NOTES)
+            if (treatmentNotesIndex !== -1) {
+                newValue.splice(treatmentNotesIndex, 1)
+            }
+            setSelectedTreatments(newValue)
+        }
+    }
+
     const getValue = (aiModelInfrastructureCombination: AiModelInfrastructureCombination) => {
         return aiModelInfrastructureCombination.aiModel + '@' + aiModelInfrastructureCombination.infrastructure
     }
 
     const onFileChange: ChangeEventHandler<HTMLInputElement> = (event: ChangeEvent): void => {
+        setErrors(errors.filter(error => error.path !== 'file'));
         const files: FileList = event.target['files'];
         if (files[0].size > MAX_FILE_SIZE) {
-            setInvalidFile(true);
+            setErrors([...errors, {path: 'file', message: 'La taille du fichier dépasse la taille maximale de 700 Mo'}])
             setDisableForm(true);
         } else {
-            setInvalidFile(false);
             setDisableForm(false);
         }
     }
 
     const toggleUploadMethod = () => {
+        setErrors(errors.filter(error => error.path !== 'file' && error.path !== 'url'));
         setUploadViaUrl(!uploadViaUrl);
-        setInvalidFile(false);
         setDisableForm(false);
     }
 
@@ -226,17 +271,41 @@ export default function () {
                             {uploadViaUrl? 
                                 <Form.Group className="mb-3" controlId="mediaUpload.url">
                                     <Form.Label>URL du fichier média*</Form.Label>
-                                    <Form.Control placeholder="Entrez l'URL de votre fichier" type="string" />
+                                    <Form.Control
+                                        placeholder="Entrez l'URL de votre fichier"
+                                        type="string"
+                                        isInvalid={errors.filter(error => error.path === 'url').length > 0}
+                                    />
+                                    {errors.filter(error => error.path === 'url').map((error, index) => {
+                                        return <Form.Control.Feedback type="invalid" key={`error-url-${index}`}>{error.message}</Form.Control.Feedback>
+                                    })}
                                 </Form.Group>
                                 :
                                 <Form.Group className="mb-3" controlId="mediaUpload.file">
                                     <Form.Label>Téléverser le fichier média*</Form.Label>
-                                    <Form.Control type="file" onChange={onFileChange} isInvalid={invalidFile}/>
-                                    <Form.Control.Feedback type="invalid">
-                                        La taille du fichier dépasse la taille maximale de 700 Mo
-                                    </Form.Control.Feedback>
+                                    <Form.Control
+                                        type="file"
+                                        onChange={onFileChange}
+                                        isInvalid={errors.filter(error => error.path === 'file').length > 0}
+                                    />
+                                    {errors.filter(error => error.path === 'file').map((error, index) => {
+                                        return <Form.Control.Feedback type="invalid" key={`error-file-${index}`}>{error.message}</Form.Control.Feedback>
+                                    })}
                                 </Form.Group>
                             }
+                            <Form.Group className="mb-3" controlId="mediaUpload.aiEvaluation">
+                                <Form.Label>Traitement</Form.Label>
+                                <Select
+                                    className='mb-3'
+                                    components={animatedComponents}
+                                    options={AVAILABLE_TREATMENTS}
+                                    placeholder="Choisir les traitements"
+                                    value={selectedTreatments}
+                                    onChange={onTreatmentChange}
+                                    isClearable
+                                    isMulti
+                                />
+                            </Form.Group>
                             <Form.Group className="mb-3" controlId="mediaUpload.aiEvaluation">
                                 <Form.Label>Modèle et infrastructure</Form.Label>
                                 <Select
@@ -261,33 +330,39 @@ export default function () {
                                     isClearable
                                 />
                             </Form.Group> */}
-                            <Form.Group className="mb-3" controlId="mediaUpload.disciplines">
-                                <Form.Label className='mb-1'>Disciplines*</Form.Label>
-                                <div className='text-black-50 small mb-2'>
-                                    Aristote choisira la discipline principale de votre média parmi la liste que vous lui proposez
-                                </div>
-                                <CreatableSelect
-                                    className='mb-3'
-                                    components={animatedComponents}
-                                    isMulti
-                                    placeholder='Mathématiques, Sociologie, Chimie, ...'
-                                    onChange={onDisciplinesChange}
-                                />
-                            </Form.Group>
-                            <Form.Group className="mb-3" controlId="mediaUpload.mediaTypes">
-                                <Form.Label className='mb-1'>Nature du média*</Form.Label>
-                                <div className='text-black-50 small mb-2'>
-                                    Aristote choisira la nature de votre média parmi la liste que vous lui proposez
-                                </div>
-                                <CreatableSelect
-                                    className='mb-3'
-                                    components={animatedComponents}
-                                    isMulti
-                                    options={MEDIA_TYPES}
-                                    placeholder='Conférence, cours, webinaire, ...'
-                                    onChange={onMediaTypesChange}
-                                />
-                            </Form.Group>
+                            {selectedTreatments.filter(treatment => treatment.value === TREATMENT_METADATA).length > 0 &&
+                                <>
+                                    <Form.Group className="mb-3" controlId="mediaUpload.disciplines">
+                                        <Form.Label className='mb-1'>Disciplines*</Form.Label>
+                                        <div className='text-black-50 small mb-2'>
+                                            Aristote choisira la discipline principale de votre média parmi la liste que vous lui proposez
+                                        </div>
+                                        <CreatableSelect
+                                            className='mb-3'
+                                            components={animatedComponents}
+                                            isMulti
+                                            placeholder='Mathématiques, Sociologie, Chimie, ...'
+                                            onChange={onDisciplinesChange}
+                                            required
+                                        />
+                                    </Form.Group>
+                                    <Form.Group className="mb-3" controlId="mediaUpload.mediaTypes">
+                                        <Form.Label className='mb-1'>Nature du média*</Form.Label>
+                                        <div className='text-black-50 small mb-2'>
+                                            Aristote choisira la nature de votre média parmi la liste que vous lui proposez
+                                        </div>
+                                        <CreatableSelect
+                                            className='mb-3'
+                                            components={animatedComponents}
+                                            isMulti
+                                            options={MEDIA_TYPES}
+                                            placeholder='Conférence, cours, webinaire, ...'
+                                            onChange={onMediaTypesChange}
+                                            required
+                                        />
+                                    </Form.Group>
+                                </>
+                            }
                             <Form.Group className="mb-3" controlId="mediaUpload.language">
                                 <Form.Label>Langue du média (obligatoire si le fichier est SRT/VTT)</Form.Label>
                                 <Select

@@ -37,8 +37,7 @@ class HomeController extends AbstractController
         $enrichmentId = $requestBody['id'];
         $status = $requestBody['status'];
 
-        $response = $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s', $enrichmentId));
-        $enrichment = $response->toArray();
+        $enrichment = json_decode($this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s', $enrichmentId))->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
         if (array_key_exists('endUserIdentifier', $enrichment)) {
             $endUserIdentifier = $enrichment['endUserIdentifier'];
@@ -71,11 +70,10 @@ class HomeController extends AbstractController
         $user = $this->getUser();
         $requestBody = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         $requestBody['endUserIdentifier'] = $user->getUserIdentifier();
-        $response = $this->aristoteApiService->apiRequestWithToken('POST', '/enrichments/url', [
+
+        return $this->aristoteApiService->apiRequestWithToken('POST', '/enrichments/url', [
             'body' => json_encode($requestBody, JSON_THROW_ON_ERROR),
         ]);
-
-        return new JsonResponse($response->toArray());
     }
 
     #[Route('/api/enrichments/upload', name: 'app_create_enrichment_by_file', options: ['expose' => true], methods: ['POST'])]
@@ -103,7 +101,7 @@ class HomeController extends AbstractController
         ]);
         fclose($fileResource);
 
-        return new JsonResponse($response->toArray());
+        return $response;
     }
 
     #[Route('/api/enrichments/{enrichmentId}/new_ai_enrichment', name: 'app_create_new_ai_enrichment', options: ['expose' => true], methods: ['POST'])]
@@ -112,19 +110,23 @@ class HomeController extends AbstractController
         $user = $this->getUser();
         $requestBody = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         $requestBody['endUserIdentifier'] = $user->getUserIdentifier();
-        $response = $this->aristoteApiService->apiRequestWithToken('POST', sprintf('/enrichments/%s/new_ai_version', $enrichmentId), [
+
+        return $this->aristoteApiService->apiRequestWithToken('POST', sprintf('/enrichments/%s/new_ai_version', $enrichmentId), [
             'body' => json_encode($requestBody, JSON_THROW_ON_ERROR),
         ]);
-
-        return new JsonResponse($response->toArray());
     }
 
     #[Route('/enrichments/{enrichmentId}', name: 'app_enrichment', options: ['expose' => true])]
     public function enrichmentById(string $enrichmentId): Response
     {
-        $response = $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions/latest', $enrichmentId));
-        $data = $response->toArray();
-        if (true === $data['aiGenerated'] && null === $data['lastEvaluationDate']) {
+        $data = json_decode($this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions/latest', $enrichmentId))->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        if (
+            true === $data['aiGenerated'] && null === $data['lastEvaluationDate']
+            && (
+                null !== $data['enrichmentVersionMetadata'] || [] !== $data['multipleChoiceQuestions']
+            )
+        ) {
             return $this->redirectToRoute('app_enrichment_evaluate', ['enrichmentId' => $enrichmentId]);
         }
 
@@ -134,8 +136,7 @@ class HomeController extends AbstractController
     #[Route('/enrichments/{enrichmentId}/create_new_version', name: 'app_create_new_version', options: ['expose' => true])]
     public function createNewVersion(string $enrichmentId): Response
     {
-        $response = $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions/latest', $enrichmentId));
-        $data = $response->toArray();
+        $data = json_decode($this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions/latest', $enrichmentId))->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
         return $this->render('home/new_enrichment_version.html.twig', ['enrichmentId' => $enrichmentId, 'enrichmentVersion' => $data]);
     }
@@ -150,69 +151,49 @@ class HomeController extends AbstractController
     public function enrichments(HttpClientInterface $httpClient): JsonResponse
     {
         $user = $this->getUser();
-        $response = $this->aristoteApiService->apiRequestWithToken('GET', '/enrichments', [
+
+        return $this->aristoteApiService->apiRequestWithToken('GET', '/enrichments', [
             'query' => [
                 'endUserIdentifier' => $user->getUserIdentifier(),
                 'withStatus' => 'true',
             ],
         ]);
-        $data = $response->toArray();
-
-        return new JsonResponse($data);
     }
 
     #[Route('/api/enrichment/{enrichmentId}/versions/latest', name: 'app_latest_enrichment_version', options: ['expose' => true])]
     public function latestEnrichmentVersion(string $enrichmentId): JsonResponse
     {
-        $response = $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions/latest', $enrichmentId));
-        $data = $response->toArray();
-
-        return new JsonResponse($data);
+        return $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions/latest', $enrichmentId));
     }
 
     #[Route('/api/enrichment/{enrichmentId}/versions', name: 'app_get_enrichment_versions', methods: ['GET'], options: ['expose' => true])]
     public function getEnrichmentVersions(string $enrichmentId): JsonResponse
     {
-        $response = $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions?withTranscript=false&order=ASC&size=50', $enrichmentId));
-        $data = $response->toArray();
-
-        return new JsonResponse($data);
+        return $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions?withTranscript=false&order=ASC&size=50', $enrichmentId));
     }
 
     #[Route('/api/enrichment/{enrichmentId}/versions/{versionId}', name: 'app_get_enrichment_version', options: ['expose' => true])]
     public function getEnrichmentVersion(string $enrichmentId, string $versionId): JsonResponse
     {
-        $response = $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions/%s', $enrichmentId, $versionId));
-        $data = $response->toArray();
-
-        return new JsonResponse($data);
+        return $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions/%s', $enrichmentId, $versionId));
     }
 
     #[Route('/api/enrichment/{enrichmentId}', name: 'app_get_enrichment', options: ['expose' => true])]
     public function getEnrichment(string $enrichmentId): JsonResponse
     {
-        $response = $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s', $enrichmentId));
-        $data = $response->toArray();
-
-        return new JsonResponse($data);
+        return $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s', $enrichmentId));
     }
 
     #[Route('/api/enrichments/{enrichmentId}', name: 'app_delete_enrichment', options: ['expose' => true], methods: ['DELETE'])]
     public function deleteEnrichmentById(string $enrichmentId): Response
     {
-        $response = $this->aristoteApiService->apiRequestWithToken('DELETE', sprintf('/enrichments/%s', $enrichmentId));
-        $data = $response->toArray();
-
-        return new JsonResponse($data);
+        return $this->aristoteApiService->apiRequestWithToken('DELETE', sprintf('/enrichments/%s', $enrichmentId));
     }
 
     #[Route('/api/enrichments/get_ai_model_infrastructure_combinations', name: 'app_get_ai_model_infrastructure_combinations', options: ['expose' => true])]
     public function getAiModelInfrastructureCombinations(): Response
     {
-        $response = $this->aristoteApiService->apiRequestWithToken('GET', '/enrichments/ai_model_infrastructure_combinations');
-        $data = $response->toArray();
-
-        return new JsonResponse($data);
+        return $this->aristoteApiService->apiRequestWithToken('GET', '/enrichments/ai_model_infrastructure_combinations');
     }
 
     #[Route('/api/enrichment/{enrichmentId}/versions/{versionId}/evaluate', name: 'app_evaluate_enrichment_version', methods: ['POST'], options: ['expose' => true])]
@@ -220,11 +201,9 @@ class HomeController extends AbstractController
     {
         $requestBody = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
-        $response = $this->aristoteApiService->apiRequestWithToken('POST', sprintf('/enrichments/%s/versions/%s/evaluate', $enrichmentId, $versionId), [
+        return $this->aristoteApiService->apiRequestWithToken('POST', sprintf('/enrichments/%s/versions/%s/evaluate', $enrichmentId, $versionId), [
             'body' => json_encode($requestBody, JSON_THROW_ON_ERROR),
         ]);
-
-        return new JsonResponse($response->toArray());
     }
 
     #[Route('/api/enrichment/{enrichmentId}/versions/{versionId}/mcq/{mcqId}', name: 'app_evaluate_mcq', methods: ['POST'], options: ['expose' => true])]
@@ -232,11 +211,9 @@ class HomeController extends AbstractController
     {
         $requestBody = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
-        $response = $this->aristoteApiService->apiRequestWithToken('POST', sprintf('/enrichments/%s/versions/%s/mcq/%s', $enrichmentId, $versionId, $mcqId), [
+        return $this->aristoteApiService->apiRequestWithToken('POST', sprintf('/enrichments/%s/versions/%s/mcq/%s', $enrichmentId, $versionId, $mcqId), [
             'body' => json_encode($requestBody, JSON_THROW_ON_ERROR),
         ]);
-
-        return new JsonResponse($response->toArray());
     }
 
     #[Route('/api/enrichment/{enrichmentId}/versions/{versionId}/mcq/{mcqId}/choice/{choiceId}', name: 'app_evaluate_choice', methods: ['POST'], options: ['expose' => true])]
@@ -244,14 +221,12 @@ class HomeController extends AbstractController
     {
         $requestBody = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
-        $response = $this->aristoteApiService->apiRequestWithToken('POST',
+        return $this->aristoteApiService->apiRequestWithToken('POST',
             sprintf('/enrichments/%s/versions/%s/mcq/%s/choice/%s', $enrichmentId, $versionId, $mcqId, $choiceId),
             [
                 'body' => json_encode($requestBody, JSON_THROW_ON_ERROR),
             ]
         );
-
-        return new JsonResponse($response->toArray());
     }
 
     #[Route('/api/enrichment/{enrichmentId}/versions', name: 'app_create_enrichment_version', methods: ['POST'], options: ['expose' => true])]
@@ -259,19 +234,21 @@ class HomeController extends AbstractController
     {
         $multipleChoiceQuestions = $request->request->get('multipleChoiceQuestions');
         $enrichmentVersionMetadata = $request->request->get('enrichmentVersionMetadata');
+        $notes = $request->request->get('notes');
+        $translatedNotes = $request->request->get('translatedNotes');
         $translate = $request->request->get('translate');
 
-        $response = $this->aristoteApiService->apiRequestWithToken('POST', sprintf('/enrichments/%s/versions', $enrichmentId), [
+        return $this->aristoteApiService->apiRequestWithToken('POST', sprintf('/enrichments/%s/versions', $enrichmentId), [
             'body' => [
                 'enrichmentVersionMetadata' => $enrichmentVersionMetadata,
                 'multipleChoiceQuestions' => $multipleChoiceQuestions,
+                'notes' => $notes,
+                'translatedNotes' => $translatedNotes,
                 'translate' => 'true' === $translate,
             ],
             'headers' => [
                 'Content-Type' => 'multipart/form-data',
             ],
         ]);
-
-        return new JsonResponse($response->toArray());
     }
 }

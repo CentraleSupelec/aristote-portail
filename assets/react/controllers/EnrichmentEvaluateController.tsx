@@ -199,301 +199,309 @@ export default function ({enrichmentId} : EnrichmentControllerProps) {
                         <div className='mb-4 small'>
                             Une fois l’évaluation terminée, vous pourrez passer à l’étape suivante pour modifier ces informations.
                         </div>
-                        <div className='fw-bold h3'>
-                            Métadonnées
-                        </div>
-                        <div className='d-flex'>
-                            <i id='media-icon' className="fa-regular fa-circle-play p-5"></i>
-                            <div className='d-flex flex-column justify-content-center p-3 bg-light rounded'>
-                                <div className='d-flex justify-content-between'>
-                                    <div className='me-2'>
-                                        <strong>Titre : </strong> {enrichmentVersion.enrichmentVersionMetadata.title}
-                                    </div>
-                                    <div
-                                        className='d-flex'
-                                        key={`metadata-title-
-                                            ${enrichmentVersion.enrichmentVersionMetadata.thumbUpTitle === true ? '-thumb-up' : ''}
-                                            ${enrichmentVersion.enrichmentVersionMetadata.thumbUpTitle === false ? '-thumb-down': ''}
-                                        `}
-                                    >
-                                        <div onClick={() => evaluateMetadata('thumbUpTitle', true)}>
-                                            {enrichmentVersion.enrichmentVersionMetadata.thumbUpTitle === true ?
-                                                <i className="fa-solid fa-thumbs-up me-3 thumb-gray fa-xl" role='button'></i>
-                                                : 
-                                                <i className="fa-regular fa-thumbs-up me-3 thumb-gray fa-lg" role='button'></i>
-                                            }
-                                        </div>
-                                        <div onClick={() => evaluateMetadata('thumbUpTitle', false)}>
-                                            {enrichmentVersion.enrichmentVersionMetadata.thumbUpTitle === false ?
-                                                <i className="fa-solid fa-thumbs-down me-3 thumb-gray fa-xl" role='button'></i>
-                                                : 
-                                                <i className="fa-regular fa-thumbs-down me-3 thumb-gray fa-lg" role='button'></i>
-                                            }
-                                        </div>
-                                    </div>
+                        {enrichmentVersion.enrichmentVersionMetadata &&
+                            <>
+                                <div className='fw-bold h3'>
+                                    Métadonnées
                                 </div>
-                                <div className='d-flex justify-content-between'>
-                                    <div className='me-2'>
-                                        <strong>Description : </strong> {enrichmentVersion.enrichmentVersionMetadata.description}
-                                    </div>
-                                    <div
-                                        className='d-flex'
-                                        key={`metadata-description-
-                                            ${enrichmentVersion.enrichmentVersionMetadata.thumbUpDescription === true ? '-thumb-up' : ''}
-                                            ${enrichmentVersion.enrichmentVersionMetadata.thumbUpDescription === false ? '-thumb-down': ''}
-                                        `}
-                                    >
-                                        <div onClick={() => evaluateMetadata('thumbUpDescription', true)}>
-                                            {enrichmentVersion.enrichmentVersionMetadata.thumbUpDescription === true ?
-                                                <i className="fa-solid fa-thumbs-up me-3 thumb-gray fa-xl" role='button'></i>
-                                                : 
-                                                <i className="fa-regular fa-thumbs-up me-3 thumb-gray fa-lg" role='button'></i>
-                                            }
-                                        </div>
-                                        <div onClick={() => evaluateMetadata('thumbUpDescription', false)}>
-                                            {enrichmentVersion.enrichmentVersionMetadata.thumbUpDescription === false ?
-                                                <i className="fa-solid fa-thumbs-down me-3 thumb-gray fa-xl" role='button'></i>
-                                                : 
-                                                <i className="fa-regular fa-thumbs-down me-3 thumb-gray fa-lg" role='button'></i>
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className='d-flex justify-content-between'>
-                                    <div className='me-2'>
-                                        <strong>Discipline : </strong> {enrichmentVersion.enrichmentVersionMetadata.discipline}
-                                    </div>
-                                    <div
-                                        className='d-flex'
-                                        key={`metadata-discipline-
-                                            ${enrichmentVersion.enrichmentVersionMetadata.thumbUpDiscipline === true ? '-thumb-up' : ''}
-                                            ${enrichmentVersion.enrichmentVersionMetadata.thumbUpDiscipline === false ? '-thumb-down': ''}
-                                        `}
-                                    >
-                                        <div onClick={() => evaluateMetadata('thumbUpDiscipline', true)}>
-                                            {enrichmentVersion.enrichmentVersionMetadata.thumbUpDiscipline === true ?
-                                                <i className="fa-solid fa-thumbs-up me-3 thumb-gray fa-xl" role='button'></i>
-                                                : 
-                                                <i className="fa-regular fa-thumbs-up me-3 thumb-gray fa-lg" role='button'></i>
-                                            }
-                                        </div>
-                                        <div onClick={() => evaluateMetadata('thumbUpDiscipline', false)}>
-                                            {enrichmentVersion.enrichmentVersionMetadata.thumbUpDiscipline === false ?
-                                                <i className="fa-solid fa-thumbs-down me-3 thumb-gray fa-xl" role='button'></i>
-                                                : 
-                                                <i className="fa-regular fa-thumbs-down me-3 thumb-gray fa-lg" role='button'></i>
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className='d-flex justify-content-between'>
-                                    <div className='me-2'>
-                                        <strong>Nature de média : </strong> {enrichmentVersion.enrichmentVersionMetadata.mediaType}
-                                    </div>
-                                    <div
-                                        className='d-flex'
-                                        key={`metadata-mediaType-
-                                            ${enrichmentVersion.enrichmentVersionMetadata.thumbUpMediaType === true ? '-thumb-up' : ''}
-                                            ${enrichmentVersion.enrichmentVersionMetadata.thumbUpMediaType === false ? '-thumb-down': ''}
-                                        `}
-                                    >
-                                        <div onClick={() => evaluateMetadata('thumbUpMediaType', true)}>
-                                            {enrichmentVersion.enrichmentVersionMetadata.thumbUpMediaType === true ?
-                                                <i className="fa-solid fa-thumbs-up me-3 thumb-gray fa-xl" role='button'></i>
-                                                : 
-                                                <i className="fa-regular fa-thumbs-up me-3 thumb-gray fa-lg" role='button'></i>
-                                            }
-                                        </div>
-                                        <div onClick={() => evaluateMetadata('thumbUpMediaType', false)}>
-                                            {enrichmentVersion.enrichmentVersionMetadata.thumbUpMediaType === false ?
-                                                <i className="fa-solid fa-thumbs-down me-3 thumb-gray fa-xl" role='button'></i>
-                                                : 
-                                                <i className="fa-regular fa-thumbs-down me-3 thumb-gray fa-lg" role='button'></i>
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className='d-flex justify-content-between'>
-                                    <div className='me-2'>
-                                        <strong>Sujets : </strong> {enrichmentVersion.enrichmentVersionMetadata.topics.join(', ')}
-                                    </div>
-                                    <div
-                                        className='d-flex'
-                                        key={`metadata-topics-
-                                            ${enrichmentVersion.enrichmentVersionMetadata.thumbUpTopics === true ? '-thumb-up' : ''}
-                                            ${enrichmentVersion.enrichmentVersionMetadata.thumbUpTopics === false ? '-thumb-down': ''}
-                                        `}
-                                    >
-                                        <div onClick={() => evaluateMetadata('thumbUpTopics', true)}>
-                                            {enrichmentVersion.enrichmentVersionMetadata.thumbUpTopics === true ?
-                                                <i className="fa-solid fa-thumbs-up me-3 thumb-gray fa-xl" role='button'></i>
-                                                : 
-                                                <i className="fa-regular fa-thumbs-up me-3 thumb-gray fa-lg" role='button'></i>
-                                            }
-                                        </div>
-                                        <div onClick={() => evaluateMetadata('thumbUpTopics', false)}>
-                                            {enrichmentVersion.enrichmentVersionMetadata.thumbUpTopics === false ?
-                                                <i className="fa-solid fa-thumbs-down me-3 thumb-gray fa-xl" role='button'></i>
-                                                : 
-                                                <i className="fa-regular fa-thumbs-down me-3 thumb-gray fa-lg" role='button'></i>
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className='my-2'>
-                                    <Button onClick={toggleMetadataUserFeedbackModal}>Ajouter un commentaire</Button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className='fw-bold h3'>
-                        QCM
-                    </div>
-                    <div className='table-striped mt-5'>
-                        <table className="enrichment-table table table-sm table-borderless table-hover align-middle mb-0 border-bottom">
-                            <thead>
-                                <tr className="border-bottom text-center">
-                                    <th className="border-end col-4">
-                                        Question
-                                    </th>
-                                    <th className="border-end col-2">
-                                        Critères respectés
-                                    </th>
-                                    <th className="border-end col-6">
-                                        Réponses
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {enrichmentVersion.multipleChoiceQuestions ? enrichmentVersion.multipleChoiceQuestions.sort(sortMCQs).map((multipleChoiceQuestion, mcqIndex) => 
-                                        <tr className="border-bottom" key={`question-row-${multipleChoiceQuestion.id}`}>
-                                            <td className="border-end text-center">
-                                                <div 
-                                                    className='d-flex justify-content-center align-items-center'
-                                                    key={`mcq-
-                                                        ${multipleChoiceQuestion.id}
-                                                        ${multipleChoiceQuestion.thumbUp === true ? '-thumb-up' : ''}
-                                                        ${multipleChoiceQuestion.thumbUp === false ? '-thumb-down': ''}
-                                                    `}
-                                                >
-                                                    <div className='me-3'>
-                                                        {multipleChoiceQuestion.question}
-                                                    </div>
-                                                    <div onClick={() => evaluateMultipleChoiceQuestion(mcqIndex, true)}>
-                                                        {multipleChoiceQuestion.thumbUp === true ?
-                                                            <i className="fa-solid fa-thumbs-up me-3 thumb-gray fa-xl" role='button'></i>
-                                                            : 
-                                                            <i className="fa-regular fa-thumbs-up me-3 thumb-gray fa-lg" role='button'></i>
-                                                        }
-                                                    </div>
-                                                    <div onClick={() => evaluateMultipleChoiceQuestion(mcqIndex, false)}>
-                                                        {multipleChoiceQuestion.thumbUp === false ? 
-                                                            <i className="fa-solid fa-thumbs-down me-3 thumb-gray fa-xl" role='button'></i>
-                                                            : 
-                                                            <i className="fa-regular fa-thumbs-down me-3 thumb-gray fa-lg" role='button'></i>
-                                                        }
-                                                    </div>
+                                <div className='d-flex'>
+                                    <i id='media-icon' className="fa-regular fa-circle-play p-5"></i>
+                                    <div className='d-flex flex-column justify-content-center p-3 bg-light rounded'>
+                                        <div className='d-flex justify-content-between'>
+                                            <div className='me-2'>
+                                                <strong>Titre : </strong> {enrichmentVersion.enrichmentVersionMetadata.title}
+                                            </div>
+                                            <div
+                                                className='d-flex'
+                                                key={`metadata-title-
+                                                    ${enrichmentVersion.enrichmentVersionMetadata.thumbUpTitle === true ? '-thumb-up' : ''}
+                                                    ${enrichmentVersion.enrichmentVersionMetadata.thumbUpTitle === false ? '-thumb-down': ''}
+                                                `}
+                                            >
+                                                <div onClick={() => evaluateMetadata('thumbUpTitle', true)}>
+                                                    {enrichmentVersion.enrichmentVersionMetadata.thumbUpTitle === true ?
+                                                        <i className="fa-solid fa-thumbs-up me-3 thumb-gray fa-xl" role='button'></i>
+                                                        : 
+                                                        <i className="fa-regular fa-thumbs-up me-3 thumb-gray fa-lg" role='button'></i>
+                                                    }
                                                 </div>
-                                            </td>
-                                            <td className="border-end text-center">
-                                                {multipleChoiceQuestion.evaluation?
-                                                    <Badge className='criteria-badge' bg={evaluationColor(multipleChoiceQuestion.evaluation)} role='button' onClick={() => toggleCriteriaModal(multipleChoiceQuestion.evaluation)}>
-                                                        {Object.values(multipleChoiceQuestion.evaluation).filter(value => value === true).length} / {Object.keys(multipleChoiceQuestion.evaluation).length}
-                                                    </Badge>
-                                                    : '-'
-                                                }
-                                            </td>
-                                            <td className="border-end text-center">
-                                                <div className='d-flex flex-column'>
-                                                    {multipleChoiceQuestion.choices? multipleChoiceQuestion.choices.sort(sortChoices).map((choice, choiceIndex) => 
-                                                            <div 
-                                                                key={`choice-
-                                                                    ${choice.id}
-                                                                    ${choice.thumbUp === true ? '-thumb-up' : ''}
-                                                                    ${choice.thumbUp === false ? '-thumb-down': ''}`
-                                                                }
-                                                                className='d-flex align-items-center'
-                                                            >
-                                                                <i className={`me-2 ${choice.correctAnswer? 'fa-solid fa-check text-success' : 'fa-solid fa-xmark text-danger'}`}></i>
-                                                                <Badge
-                                                                    key={`choice-${choice.id}`}
-                                                                    bg='light'
-                                                                    className='my-2 me-2 flex-grow-1 text-dark text-wrap'
-
-                                                                >
-                                                                    {choice.optionText}
-                                                                </Badge>
-
-                                                                <div onClick={() => evaluateChoice(mcqIndex, choiceIndex, true)}>
-                                                                {choice.thumbUp === true ?
+                                                <div onClick={() => evaluateMetadata('thumbUpTitle', false)}>
+                                                    {enrichmentVersion.enrichmentVersionMetadata.thumbUpTitle === false ?
+                                                        <i className="fa-solid fa-thumbs-down me-3 thumb-gray fa-xl" role='button'></i>
+                                                        : 
+                                                        <i className="fa-regular fa-thumbs-down me-3 thumb-gray fa-lg" role='button'></i>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className='d-flex justify-content-between'>
+                                            <div className='me-2'>
+                                                <strong>Description : </strong> {enrichmentVersion.enrichmentVersionMetadata.description}
+                                            </div>
+                                            <div
+                                                className='d-flex'
+                                                key={`metadata-description-
+                                                    ${enrichmentVersion.enrichmentVersionMetadata.thumbUpDescription === true ? '-thumb-up' : ''}
+                                                    ${enrichmentVersion.enrichmentVersionMetadata.thumbUpDescription === false ? '-thumb-down': ''}
+                                                `}
+                                            >
+                                                <div onClick={() => evaluateMetadata('thumbUpDescription', true)}>
+                                                    {enrichmentVersion.enrichmentVersionMetadata.thumbUpDescription === true ?
+                                                        <i className="fa-solid fa-thumbs-up me-3 thumb-gray fa-xl" role='button'></i>
+                                                        : 
+                                                        <i className="fa-regular fa-thumbs-up me-3 thumb-gray fa-lg" role='button'></i>
+                                                    }
+                                                </div>
+                                                <div onClick={() => evaluateMetadata('thumbUpDescription', false)}>
+                                                    {enrichmentVersion.enrichmentVersionMetadata.thumbUpDescription === false ?
+                                                        <i className="fa-solid fa-thumbs-down me-3 thumb-gray fa-xl" role='button'></i>
+                                                        : 
+                                                        <i className="fa-regular fa-thumbs-down me-3 thumb-gray fa-lg" role='button'></i>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className='d-flex justify-content-between'>
+                                            <div className='me-2'>
+                                                <strong>Discipline : </strong> {enrichmentVersion.enrichmentVersionMetadata.discipline}
+                                            </div>
+                                            <div
+                                                className='d-flex'
+                                                key={`metadata-discipline-
+                                                    ${enrichmentVersion.enrichmentVersionMetadata.thumbUpDiscipline === true ? '-thumb-up' : ''}
+                                                    ${enrichmentVersion.enrichmentVersionMetadata.thumbUpDiscipline === false ? '-thumb-down': ''}
+                                                `}
+                                            >
+                                                <div onClick={() => evaluateMetadata('thumbUpDiscipline', true)}>
+                                                    {enrichmentVersion.enrichmentVersionMetadata.thumbUpDiscipline === true ?
+                                                        <i className="fa-solid fa-thumbs-up me-3 thumb-gray fa-xl" role='button'></i>
+                                                        : 
+                                                        <i className="fa-regular fa-thumbs-up me-3 thumb-gray fa-lg" role='button'></i>
+                                                    }
+                                                </div>
+                                                <div onClick={() => evaluateMetadata('thumbUpDiscipline', false)}>
+                                                    {enrichmentVersion.enrichmentVersionMetadata.thumbUpDiscipline === false ?
+                                                        <i className="fa-solid fa-thumbs-down me-3 thumb-gray fa-xl" role='button'></i>
+                                                        : 
+                                                        <i className="fa-regular fa-thumbs-down me-3 thumb-gray fa-lg" role='button'></i>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className='d-flex justify-content-between'>
+                                            <div className='me-2'>
+                                                <strong>Nature de média : </strong> {enrichmentVersion.enrichmentVersionMetadata.mediaType}
+                                            </div>
+                                            <div
+                                                className='d-flex'
+                                                key={`metadata-mediaType-
+                                                    ${enrichmentVersion.enrichmentVersionMetadata.thumbUpMediaType === true ? '-thumb-up' : ''}
+                                                    ${enrichmentVersion.enrichmentVersionMetadata.thumbUpMediaType === false ? '-thumb-down': ''}
+                                                `}
+                                            >
+                                                <div onClick={() => evaluateMetadata('thumbUpMediaType', true)}>
+                                                    {enrichmentVersion.enrichmentVersionMetadata.thumbUpMediaType === true ?
+                                                        <i className="fa-solid fa-thumbs-up me-3 thumb-gray fa-xl" role='button'></i>
+                                                        : 
+                                                        <i className="fa-regular fa-thumbs-up me-3 thumb-gray fa-lg" role='button'></i>
+                                                    }
+                                                </div>
+                                                <div onClick={() => evaluateMetadata('thumbUpMediaType', false)}>
+                                                    {enrichmentVersion.enrichmentVersionMetadata.thumbUpMediaType === false ?
+                                                        <i className="fa-solid fa-thumbs-down me-3 thumb-gray fa-xl" role='button'></i>
+                                                        : 
+                                                        <i className="fa-regular fa-thumbs-down me-3 thumb-gray fa-lg" role='button'></i>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className='d-flex justify-content-between'>
+                                            <div className='me-2'>
+                                                <strong>Sujets : </strong> {enrichmentVersion.enrichmentVersionMetadata.topics.join(', ')}
+                                            </div>
+                                            <div
+                                                className='d-flex'
+                                                key={`metadata-topics-
+                                                    ${enrichmentVersion.enrichmentVersionMetadata.thumbUpTopics === true ? '-thumb-up' : ''}
+                                                    ${enrichmentVersion.enrichmentVersionMetadata.thumbUpTopics === false ? '-thumb-down': ''}
+                                                `}
+                                            >
+                                                <div onClick={() => evaluateMetadata('thumbUpTopics', true)}>
+                                                    {enrichmentVersion.enrichmentVersionMetadata.thumbUpTopics === true ?
+                                                        <i className="fa-solid fa-thumbs-up me-3 thumb-gray fa-xl" role='button'></i>
+                                                        : 
+                                                        <i className="fa-regular fa-thumbs-up me-3 thumb-gray fa-lg" role='button'></i>
+                                                    }
+                                                </div>
+                                                <div onClick={() => evaluateMetadata('thumbUpTopics', false)}>
+                                                    {enrichmentVersion.enrichmentVersionMetadata.thumbUpTopics === false ?
+                                                        <i className="fa-solid fa-thumbs-down me-3 thumb-gray fa-xl" role='button'></i>
+                                                        : 
+                                                        <i className="fa-regular fa-thumbs-down me-3 thumb-gray fa-lg" role='button'></i>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className='my-2'>
+                                            <Button onClick={toggleMetadataUserFeedbackModal}>Ajouter un commentaire</Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        }
+                    </div>
+                    {enrichmentVersion.multipleChoiceQuestions && enrichmentVersion.multipleChoiceQuestions.length > 0 &&
+                        <>
+                            <div className='fw-bold h3'>
+                                QCM
+                            </div>
+                            <div className='table-striped mt-5'>
+                                <table className="enrichment-table table table-sm table-borderless table-hover align-middle mb-0 border-bottom">
+                                    <thead>
+                                        <tr className="border-bottom text-center">
+                                            <th className="border-end col-4">
+                                                Question
+                                            </th>
+                                            <th className="border-end col-2">
+                                                Critères respectés
+                                            </th>
+                                            <th className="border-end col-6">
+                                                Réponses
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {enrichmentVersion.multipleChoiceQuestions ? enrichmentVersion.multipleChoiceQuestions.sort(sortMCQs).map((multipleChoiceQuestion, mcqIndex) => 
+                                                <tr className="border-bottom" key={`question-row-${multipleChoiceQuestion.id}`}>
+                                                    <td className="border-end text-center">
+                                                        <div 
+                                                            className='d-flex justify-content-center align-items-center'
+                                                            key={`mcq-
+                                                                ${multipleChoiceQuestion.id}
+                                                                ${multipleChoiceQuestion.thumbUp === true ? '-thumb-up' : ''}
+                                                                ${multipleChoiceQuestion.thumbUp === false ? '-thumb-down': ''}
+                                                            `}
+                                                        >
+                                                            <div className='me-3'>
+                                                                {multipleChoiceQuestion.question}
+                                                            </div>
+                                                            <div onClick={() => evaluateMultipleChoiceQuestion(mcqIndex, true)}>
+                                                                {multipleChoiceQuestion.thumbUp === true ?
                                                                     <i className="fa-solid fa-thumbs-up me-3 thumb-gray fa-xl" role='button'></i>
                                                                     : 
                                                                     <i className="fa-regular fa-thumbs-up me-3 thumb-gray fa-lg" role='button'></i>
                                                                 }
-                                                                </div>
-                                                                <div onClick={() => evaluateChoice(mcqIndex, choiceIndex, false)}>
-                                                                {choice.thumbUp === false ?
+                                                            </div>
+                                                            <div onClick={() => evaluateMultipleChoiceQuestion(mcqIndex, false)}>
+                                                                {multipleChoiceQuestion.thumbUp === false ? 
                                                                     <i className="fa-solid fa-thumbs-down me-3 thumb-gray fa-xl" role='button'></i>
                                                                     : 
                                                                     <i className="fa-regular fa-thumbs-down me-3 thumb-gray fa-lg" role='button'></i>
                                                                 }
-                                                                </div>
                                                             </div>
-                                                        )
-                                                    : null}
-                                                </div>
-                                            </td>
-                                        </tr>
+                                                        </div>
+                                                    </td>
+                                                    <td className="border-end text-center">
+                                                        {multipleChoiceQuestion.evaluation?
+                                                            <Badge className='criteria-badge' bg={evaluationColor(multipleChoiceQuestion.evaluation)} role='button' onClick={() => toggleCriteriaModal(multipleChoiceQuestion.evaluation)}>
+                                                                {Object.values(multipleChoiceQuestion.evaluation).filter(value => value === true).length} / {Object.keys(multipleChoiceQuestion.evaluation).length}
+                                                            </Badge>
+                                                            : '-'
+                                                        }
+                                                    </td>
+                                                    <td className="border-end text-center">
+                                                        <div className='d-flex flex-column'>
+                                                            {multipleChoiceQuestion.choices? multipleChoiceQuestion.choices.sort(sortChoices).map((choice, choiceIndex) => 
+                                                                    <div 
+                                                                        key={`choice-
+                                                                            ${choice.id}
+                                                                            ${choice.thumbUp === true ? '-thumb-up' : ''}
+                                                                            ${choice.thumbUp === false ? '-thumb-down': ''}`
+                                                                        }
+                                                                        className='d-flex align-items-center'
+                                                                    >
+                                                                        <i className={`me-2 ${choice.correctAnswer? 'fa-solid fa-check text-success' : 'fa-solid fa-xmark text-danger'}`}></i>
+                                                                        <Badge
+                                                                            key={`choice-${choice.id}`}
+                                                                            bg='light'
+                                                                            className='my-2 me-2 flex-grow-1 text-dark text-wrap'
 
-                                    ): null
-                                }
-                            </tbody>
-                        </table>
-                    </div>
+                                                                        >
+                                                                            {choice.optionText}
+                                                                        </Badge>
 
-                    <Modal show={showMultipleChoiceQuestionUserFeedbackModal} onHide={toggleMultipleChoiceQuestionUserFeedbackModal} size='lg'>
-                        <Modal.Header closeButton>
-                            <Modal.Title>Merci pour votre feedback</Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>
-                            <Form onSubmit={updateMultipleChoiceQuestionFeedback}>
-                                <Form.Group className="mb-3" controlId="userFeedback">
-                                    <Form.Label>
-                                        Vous pouvez ajouter un commentaire si vous voulez :
-                                    </Form.Label>
-                                    <Form.Control as="textarea" rows={3} defaultValue={enrichmentVersion.multipleChoiceQuestions[currentMultipleChoiceQuestionIndex].userFeedback} />
-                                </Form.Group>
-                                <div className='d-flex justify-content-end'>
-                                    <Button type='submit'>
-                                        Confirmer
-                                    </Button>
-                                </div>
-                            </Form>
-                        </Modal.Body>
-                    </Modal>
+                                                                        <div onClick={() => evaluateChoice(mcqIndex, choiceIndex, true)}>
+                                                                        {choice.thumbUp === true ?
+                                                                            <i className="fa-solid fa-thumbs-up me-3 thumb-gray fa-xl" role='button'></i>
+                                                                            : 
+                                                                            <i className="fa-regular fa-thumbs-up me-3 thumb-gray fa-lg" role='button'></i>
+                                                                        }
+                                                                        </div>
+                                                                        <div onClick={() => evaluateChoice(mcqIndex, choiceIndex, false)}>
+                                                                        {choice.thumbUp === false ?
+                                                                            <i className="fa-solid fa-thumbs-down me-3 thumb-gray fa-xl" role='button'></i>
+                                                                            : 
+                                                                            <i className="fa-regular fa-thumbs-down me-3 thumb-gray fa-lg" role='button'></i>
+                                                                        }
+                                                                        </div>
+                                                                    </div>
+                                                                )
+                                                            : null}
+                                                        </div>
+                                                    </td>
+                                                </tr>
 
-                    <Modal show={showMetadataUserFeedbackModal} onHide={toggleMetadataUserFeedbackModal} size='lg'>
-                        <Modal.Header closeButton>
-                            <Modal.Title>Comment puis-je m'améliorer ?</Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>
-                            <Form onSubmit={updateMetadataFeedback}>
-                                <Form.Group className="mb-3" controlId="userFeedback">
-                                    <Form.Label>
-                                        Vous pouvez écrire votre commentaire ici :
-                                    </Form.Label>
-                                    <Form.Control as="textarea" rows={3} defaultValue={enrichmentVersion.enrichmentVersionMetadata.userFeedback?? ''}/>
-                                </Form.Group>
-                                <div className='d-flex justify-content-end'>
-                                    <Button id='send-feedback-button' type='submit'>
-                                        Confirmer
-                                    </Button>
-                                </div>
-                            </Form>
-                        </Modal.Body>
-                    </Modal>
-
+                                            ): null
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
+                    }
+                    {enrichmentVersion.multipleChoiceQuestions && enrichmentVersion.multipleChoiceQuestions.length > 0 &&
+                        <Modal show={showMultipleChoiceQuestionUserFeedbackModal} onHide={toggleMultipleChoiceQuestionUserFeedbackModal} size='lg'>
+                            <Modal.Header closeButton>
+                                <Modal.Title>Merci pour votre feedback</Modal.Title>
+                            </Modal.Header>
+                            <Modal.Body>
+                                <Form onSubmit={updateMultipleChoiceQuestionFeedback}>
+                                    <Form.Group className="mb-3" controlId="userFeedback">
+                                        <Form.Label>
+                                            Vous pouvez ajouter un commentaire si vous voulez :
+                                        </Form.Label>
+                                        <Form.Control as="textarea" rows={3} defaultValue={enrichmentVersion.multipleChoiceQuestions[currentMultipleChoiceQuestionIndex].userFeedback} />
+                                    </Form.Group>
+                                    <div className='d-flex justify-content-end'>
+                                        <Button type='submit'>
+                                            Confirmer
+                                        </Button>
+                                    </div>
+                                </Form>
+                            </Modal.Body>
+                        </Modal>
+                    }
+                    {enrichmentVersion.enrichmentVersionMetadata &&
+                        <Modal show={showMetadataUserFeedbackModal} onHide={toggleMetadataUserFeedbackModal} size='lg'>
+                            <Modal.Header closeButton>
+                                <Modal.Title>Comment puis-je m'améliorer ?</Modal.Title>
+                            </Modal.Header>
+                            <Modal.Body>
+                                <Form onSubmit={updateMetadataFeedback}>
+                                    <Form.Group className="mb-3" controlId="userFeedback">
+                                        <Form.Label>
+                                            Vous pouvez écrire votre commentaire ici :
+                                        </Form.Label>
+                                        <Form.Control as="textarea" rows={3} defaultValue={enrichmentVersion.enrichmentVersionMetadata.userFeedback?? ''}/>
+                                    </Form.Group>
+                                    <div className='d-flex justify-content-end'>
+                                        <Button id='send-feedback-button' type='submit'>
+                                            Confirmer
+                                        </Button>
+                                    </div>
+                                </Form>
+                            </Modal.Body>
+                        </Modal>
+                    }
                     <Modal show={showCriteriaModal} onHide={toggleCriteriaModal} centered>
                         <Modal.Header closeButton>
                             <Modal.Title>Détail des critères d'évaluation</Modal.Title>

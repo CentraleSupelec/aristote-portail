@@ -13,5 +13,7 @@ export default interface EnrichmentVersion {
     lastEvaluationDate: string,
     aiGenerated: boolean,
     language: string,
-    translateTo: string
+    translateTo: string,
+    notes: string,
+    translatedNotes: string
 }
