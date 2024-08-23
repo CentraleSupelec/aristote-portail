@@ -5,6 +5,7 @@ namespace App\Controller\Front;
 use App\Service\AristoteApiService;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -250,5 +251,30 @@ class HomeController extends AbstractController
                 'Content-Type' => 'multipart/form-data',
             ],
         ]);
+    }
+
+    #[Route('/api/enrichment/{enrichmentId}/versions/{versionId}/download_transcript', name: 'app_download_transcript', options: ['expose' => true])]
+    public function downloadTranscript(string $enrichmentId, string $versionId, Request $request): BinaryFileResponse
+    {
+        $format = $request->query->get('format', 'srt');
+        $language = $request->query->get('language');
+
+        $queryParams = [];
+
+        if ($format) {
+            $queryParams['format'] = $format;
+        }
+
+        if ($format) {
+            $queryParams['language'] = $language;
+        }
+
+        return $this->aristoteApiService->apiRequestWithToken(
+            'GET',
+            sprintf('/enrichments/%s/versions/%s/download_transcript', $enrichmentId, $versionId),
+            [
+                'query' => $queryParams,
+            ]
+        );
     }
 }

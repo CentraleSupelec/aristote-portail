@@ -311,35 +311,39 @@ export default function ({enrichments, fetchEnrichments, aiModelInfrastructureCo
                                 isClearable
                             />
                         </Form.Group>
-                        <Form.Group className="mb-3" controlId="mediaUpload.disciplines">
-                            <Form.Label className='mb-1'>Disciplines</Form.Label>
-                            <div className='text-black-50 small mb-2'>
-                                Aristote choisira la discipline principale de votre média parmi la liste que vous lui proposez
-                            </div>
-                            <CreatableSelect
-                                className='mb-3'
-                                components={animatedComponents}
-                                isMulti
-                                placeholder='Mathématiques, Sociologie, Chimie, ...'
-                                onChange={onDisciplinesChange}
-                                value={selectedDisciplines}
-                            />
-                        </Form.Group>
-                        <Form.Group className="mb-3" controlId="mediaUpload.mediaTypes">
-                            <Form.Label className='mb-1'>Nature du média</Form.Label>
-                            <div className='text-black-50 small mb-2'>
-                                Aristote choisira la nature de votre média parmi la liste que vous lui proposez
-                            </div>
-                            <CreatableSelect
-                                className='mb-3'
-                                components={animatedComponents}
-                                isMulti
-                                options={MEDIA_TYPES}
-                                placeholder='Conférence, cours, webinaire, ...'
-                                onChange={onMediaTypesChange}
-                                value={selectedMediaTypes}
-                            />
-                        </Form.Group>
+                        {currentEnrichment && currentEnrichment.disciplines &&
+                            <Form.Group className="mb-3" controlId="mediaUpload.disciplines">
+                                <Form.Label className='mb-1'>Disciplines</Form.Label>
+                                <div className='text-black-50 small mb-2'>
+                                    Aristote choisira la discipline principale de votre média parmi la liste que vous lui proposez
+                                </div>
+                                <CreatableSelect
+                                    className='mb-3'
+                                    components={animatedComponents}
+                                    isMulti
+                                    placeholder='Mathématiques, Sociologie, Chimie, ...'
+                                    onChange={onDisciplinesChange}
+                                    value={selectedDisciplines}
+                                />
+                            </Form.Group>
+                        }
+                        {currentEnrichment && currentEnrichment.mediaTypes &&
+                            <Form.Group className="mb-3" controlId="mediaUpload.mediaTypes">
+                                <Form.Label className='mb-1'>Nature du média</Form.Label>
+                                <div className='text-black-50 small mb-2'>
+                                    Aristote choisira la nature de votre média parmi la liste que vous lui proposez
+                                </div>
+                                <CreatableSelect
+                                    className='mb-3'
+                                    components={animatedComponents}
+                                    isMulti
+                                    options={MEDIA_TYPES}
+                                    placeholder='Conférence, cours, webinaire, ...'
+                                    onChange={onMediaTypesChange}
+                                    value={selectedMediaTypes}
+                                />
+                            </Form.Group>
+                        }
                         <div className='d-flex justify-content-end'>
                             <Button id='create-enrichment-button' type='submit' disabled={disableForm}>
                                 {disableForm ?

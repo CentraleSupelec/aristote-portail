@@ -8,8 +8,10 @@ use DateInterval;
 use DateTime;
 use Exception;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
@@ -53,7 +55,8 @@ class AristoteApiService
         int $maxRetries = 1,
         int $retryDelayMs = 250,
         array $successCodes = [Response::HTTP_OK],
-    ): JsonResponse|null {
+    ): JsonResponse|BinaryFileResponse|null {
+        $filename = null;
         $response = null;
         $versionedUri = preg_match('/^\/api\/v(\d+\.\d+)/', $uri) ? $uri : sprintf('/api/v1%s', $uri);
 
@@ -93,7 +96,31 @@ class AristoteApiService
             }
         } while ($retry);
 
-        return $response instanceof ResponseInterface ? new JsonResponse($response->toArray(false), $response->getStatusCode()) : null;
+        if ($response instanceof ResponseInterface) {
+            if ('application/json' === $response->getInfo()['content_type']) {
+                return new JsonResponse($response->toArray(false), $response->getStatusCode());
+            } else {
+                $content = $response->getContent();
+                $contentDisposition = $response->getHeaders()['content-disposition'][0] ?? null;
+
+                if ($contentDisposition && preg_match('/filename[^;=\n]*=((["\']).*?\2|[^;\n]*)/', $contentDisposition, $matches)) {
+                    $filename = trim($matches[1], '"');
+                }
+
+                $tempFile = tempnam(sys_get_temp_dir(), 'file_');
+                file_put_contents($tempFile, $content);
+
+                $binaryFileResponse = new BinaryFileResponse($tempFile);
+                $binaryFileResponse->setContentDisposition(
+                    ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+                    $filename
+                );
+
+                return $binaryFileResponse;
+            }
+        }
+
+        return null;
     }
 
     /**
