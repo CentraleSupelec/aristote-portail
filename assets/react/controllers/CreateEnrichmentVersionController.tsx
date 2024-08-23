@@ -284,9 +284,8 @@ export default function ({ enrichmentId, enrichmentVersion: inputEnrichmentVersi
                         return response.json()
                     }
                 }
-            ).then((errorsResponse: ErrorsResponse) => {
+            ).then((_errorsResponse: ErrorsResponse) => {
                 setDisableForm(false);
-                console.log(errorsResponse.errors)
             })
     }
 

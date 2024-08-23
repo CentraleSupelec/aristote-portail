@@ -132,7 +132,6 @@ export default function () {
                     }
                 }
             ).then((errorsResponse: ErrorsResponse) => { 
-                console.log(errorsResponse)
                 if (errorsResponse) {
                     setErrors(errorsResponse.errors)
                 }
@@ -160,7 +159,6 @@ export default function () {
                         }
                     }
                 ).then((errorsResponse: ErrorsResponse) => {  
-                    console.log(errorsResponse)
                     if (errorsResponse) {
                         setErrors(errorsResponse.errors)
                     }
@@ -364,7 +362,7 @@ export default function () {
                                 </>
                             }
                             <Form.Group className="mb-3" controlId="mediaUpload.language">
-                                <Form.Label>Langue du média (obligatoire si le fichier est SRT/VTT)</Form.Label>
+                                <Form.Label>Langue du média</Form.Label>
                                 <Select
                                     className='mb-3'
                                     components={animatedComponents}
@@ -376,7 +374,7 @@ export default function () {
                                 />
                             </Form.Group>
                             <Form.Group className="mb-3" controlId="mediaUpload.translateTo">
-                                <Form.Label>Traduire l'enrichissement en :</Form.Label>
+                                <Form.Label>Traduire l'enrichissement en</Form.Label>
                                 <Select
                                     className='mb-3'
                                     components={animatedComponents}

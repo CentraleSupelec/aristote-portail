@@ -163,18 +163,45 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
             })
     }
 
+    const createBlob = (content: string, type: string) => {
+        return new Blob([content], { type });
+    }
+
     const downloadTranscript = () => {
-        downloadObject(JSON.stringify(enrichmentVersion.transcript, null, 2), 'application/json', 'trasncript_' + enrichmentVersion.id + '.json');
+        downloadObject(createBlob(JSON.stringify(enrichmentVersion.transcript, null, 2), 'application/json'), 'trasncript_' + enrichmentVersion.id + '.json');
+    };
+
+    const downloadTranscriptSrt = (format: string) => {
+        let queryString = `?format=${format}`
+        if (showTranslation) {
+            queryString += `&language=${enrichmentVersion.translateTo}`;
+        }
+
+        fetch(Routing.generate('app_download_transcript', {enrichmentId, versionId: enrichmentVersion.id}) + queryString)
+            .then(async response => {
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = 'subtitles.srt';
+
+                if (contentDisposition && contentDisposition.indexOf('attachment') !== -1) {
+                    const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+                    if (matches != null && matches[1]) {
+                        filename = matches[1].replace(/['"]/g, '');
+                    }
+                }
+                const blob = await response.blob();
+                return { blob, filename };
+            })
+            .then(({blob, filename}) => {
+                downloadObject(blob, filename)
+            })
     };
 
     const downloadMultipleChoiceQuestions = () => {
         const moodleXML = convertToMoodleXML(enrichmentVersion.multipleChoiceQuestions);
-        downloadObject(moodleXML, 'application/text', 'moodle_quizz' + enrichmentVersion.id + '.xml')
+        downloadObject(createBlob(moodleXML, 'application/text'), 'moodle_quizz' + enrichmentVersion.id + '.xml')
     };
 
-    const downloadObject = (content: string, type: string, fileName: string) => {    
-        const blob = new Blob([content], { type });
-    
+    const downloadObject = (blob: Blob, fileName: string) => {        
         const downloadLink = document.createElement('a');
         downloadLink.href = URL.createObjectURL(blob);
         
@@ -357,7 +384,10 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                             </div>
                         }
                         <div className='my-2'>
-                            <Button variant='secondary' className='me-3' onClick={downloadTranscript}>Télécharger la transcription</Button>
+                            <Button variant='secondary' className='me-3' onClick={downloadTranscript}>Télécharger la transcription (JSON)</Button>
+                            <Button variant='secondary' className='me-3' onClick={() => downloadTranscriptSrt("srt")}>Télécharger la transcription (SRT)</Button>
+                            <Button variant='secondary' className='me-3' onClick={() => downloadTranscriptSrt("vtt")}>Télécharger la transcription (VTT)</Button>
+
                             {enrichmentVersion.multipleChoiceQuestions && enrichmentVersion.multipleChoiceQuestions.length > 0 &&
                                 <Button variant='secondary' onClick={downloadMultipleChoiceQuestions}>Télécharger le QCM</Button>
                             }
@@ -467,35 +497,39 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                                 isClearable
                             />
                         </Form.Group>
-                        <Form.Group className="mb-3" controlId="mediaUpload.disciplines">
-                            <Form.Label className='mb-1'>Disciplines</Form.Label>
-                            <div className='text-black-50 small mb-2'>
-                                Aristote choisira la discipline principale de votre média parmi la liste que vous lui proposez
-                            </div>
-                            <CreatableSelect
-                                className='mb-3'
-                                components={animatedComponents}
-                                isMulti
-                                placeholder='Mathématiques, Sociologie, Chimie, ...'
-                                onChange={onDisciplinesChange}
-                                value={selectedDisciplines}
-                            />
-                        </Form.Group>
-                        <Form.Group className="mb-3" controlId="mediaUpload.mediaTypes">
-                            <Form.Label className='mb-1'>Nature du média</Form.Label>
-                            <div className='text-black-50 small mb-2'>
-                                Aristote choisira la nature de votre média parmi la liste que vous lui proposez
-                            </div>
-                            <CreatableSelect
-                                className='mb-3'
-                                components={animatedComponents}
-                                isMulti
-                                options={MEDIA_TYPES}
-                                placeholder='Conférence, cours, webinaire, ...'
-                                onChange={onMediaTypesChange}
-                                value={selectedMediaTypes}
-                            />
-                        </Form.Group>
+                        {enrichmentVersion && enrichmentVersion.enrichmentVersionMetadata &&
+                            <>
+                                <Form.Group className="mb-3" controlId="mediaUpload.disciplines">
+                                    <Form.Label className='mb-1'>Disciplines</Form.Label>
+                                    <div className='text-black-50 small mb-2'>
+                                        Aristote choisira la discipline principale de votre média parmi la liste que vous lui proposez
+                                    </div>
+                                    <CreatableSelect
+                                        className='mb-3'
+                                        components={animatedComponents}
+                                        isMulti
+                                        placeholder='Mathématiques, Sociologie, Chimie, ...'
+                                        onChange={onDisciplinesChange}
+                                        value={selectedDisciplines}
+                                    />
+                                </Form.Group>
+                                <Form.Group className="mb-3" controlId="mediaUpload.mediaTypes">
+                                    <Form.Label className='mb-1'>Nature du média</Form.Label>
+                                    <div className='text-black-50 small mb-2'>
+                                        Aristote choisira la nature de votre média parmi la liste que vous lui proposez
+                                    </div>
+                                    <CreatableSelect
+                                        className='mb-3'
+                                        components={animatedComponents}
+                                        isMulti
+                                        options={MEDIA_TYPES}
+                                        placeholder='Conférence, cours, webinaire, ...'
+                                        onChange={onMediaTypesChange}
+                                        value={selectedMediaTypes}
+                                    />
+                                </Form.Group>
+                            </>
+                        }
                         <div className='d-flex justify-content-end'>
                             <Button id='create-enrichment-button' type='submit' disabled={disableForm}>
                                 {disableForm ?
