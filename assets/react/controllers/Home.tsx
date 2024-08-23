@@ -8,9 +8,21 @@ import Enrichments from '../interfaces/Enrichments';
 import EnrichmentsList from '../components/EnrichmentsList';
 import SelectOption from '../interfaces/SelectOption';
 import AiModelInfrastructureCombination from '../interfaces/AiModelInfrastructureCombination';
-import { AVAILABLE_AIS, AVAILABLE_LANGUAGES, AVAILABLE_TREATMENTS, DEFAULT_TREATMENTS, MEDIA_TYPES, NOTIFICATION_URL, TREATMENT_METADATA, TREATMENT_NOTES, TREATMENT_QUIZ } from '../constants';
+import { AVAILABLE_AIS, AVAILABLE_LANGUAGES, MEDIA_TYPES, NOTIFICATION_URL, TREATMENT_METADATA, TREATMENT_NOTES, TREATMENT_QUIZ } from '../constants';
 import ErrorsResponse from '../interfaces/ErrorsResponse';
 import Error from '../interfaces/Error';
+
+
+export const AVAILABLE_TREATMENTS: SelectOption[] = [
+    {value: TREATMENT_METADATA, label: 'Métadonnées'},
+    {value: TREATMENT_QUIZ, label: 'Quiz'},
+    {value: TREATMENT_NOTES, label: 'Prise de notes'},
+]
+
+export const DEFAULT_TREATMENTS: SelectOption[] = [
+    {value: TREATMENT_METADATA, label: 'Métadonnées'},
+    {value: TREATMENT_QUIZ, label: 'Quiz'},
+]
 
 export default function () {
     const MAX_FILE_SIZE = 734003200;
@@ -291,7 +303,7 @@ export default function () {
                                     })}
                                 </Form.Group>
                             }
-                            <Form.Group className="mb-3" controlId="mediaUpload.aiEvaluation">
+                            <Form.Group className="mb-3" controlId="mediaUpload.treatments">
                                 <Form.Label>Traitement</Form.Label>
                                 <Select
                                     className='mb-3'
@@ -328,7 +340,7 @@ export default function () {
                                     isClearable
                                 />
                             </Form.Group> */}
-                            {selectedTreatments.filter(treatment => treatment.value === TREATMENT_METADATA).length > 0 &&
+                            {selectedTreatments && selectedTreatments.filter(treatment => treatment.value === TREATMENT_METADATA).length > 0 &&
                                 <>
                                     <Form.Group className="mb-3" controlId="mediaUpload.disciplines">
                                         <Form.Label className='mb-1'>Disciplines*</Form.Label>
