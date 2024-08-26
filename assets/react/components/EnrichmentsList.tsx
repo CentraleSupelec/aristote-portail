@@ -202,7 +202,7 @@ export default function ({enrichments, fetchEnrichments, aiModelInfrastructureCo
                                     </OverlayTrigger>
                                 </div>
                             </th>
-                            <th className="border-end col-3"></th>
+                            <th className="border-end col-4"></th>
                         </tr>
                     </thead>
                     <tbody>

@@ -13,7 +13,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class HomeController extends AbstractController
 {
@@ -32,7 +31,7 @@ class HomeController extends AbstractController
     }
 
     #[Route('/api/webhook', name: 'app_enrichment_notification', options: ['expose' => true], methods: ['POST'])]
-    public function sendEmailNotification(Request $request, HttpClientInterface $httpClient, MailerInterface $mailer,
+    public function sendEmailNotification(Request $request, MailerInterface $mailer,
     ): JsonResponse {
         $requestBody = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         $enrichmentId = $requestBody['id'];
@@ -66,7 +65,7 @@ class HomeController extends AbstractController
     }
 
     #[Route('/api/enrichments/url', name: 'app_create_enrichment_by_url', options: ['expose' => true], methods: ['POST'])]
-    public function createEnrichmentByUrl(Request $request, HttpClientInterface $httpClient): JsonResponse
+    public function createEnrichmentByUrl(Request $request): JsonResponse
     {
         $user = $this->getUser();
         $requestBody = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
@@ -78,7 +77,7 @@ class HomeController extends AbstractController
     }
 
     #[Route('/api/enrichments/upload', name: 'app_create_enrichment_by_file', options: ['expose' => true], methods: ['POST'])]
-    public function createEnrichmentByFile(Request $request, HttpClientInterface $httpClient): JsonResponse
+    public function createEnrichmentByFile(Request $request): JsonResponse
     {
         $user = $this->getUser();
         /** @var UploadedFile $file */
@@ -106,7 +105,7 @@ class HomeController extends AbstractController
     }
 
     #[Route('/api/enrichments/{enrichmentId}/new_ai_enrichment', name: 'app_create_new_ai_enrichment', options: ['expose' => true], methods: ['POST'])]
-    public function createNewAiEnrichment(string $enrichmentId, Request $request, HttpClientInterface $httpClient): JsonResponse
+    public function createNewAiEnrichment(string $enrichmentId, Request $request): JsonResponse
     {
         $user = $this->getUser();
         $requestBody = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
@@ -149,14 +148,17 @@ class HomeController extends AbstractController
     }
 
     #[Route('/api/enrichments', name: 'app_enrichments', options: ['expose' => true])]
-    public function enrichments(HttpClientInterface $httpClient): JsonResponse
+    public function enrichments(Request $request): JsonResponse
     {
         $user = $this->getUser();
+        $page = $request->query->get('page', 1);
 
         return $this->aristoteApiService->apiRequestWithToken('GET', '/enrichments', [
             'query' => [
                 'endUserIdentifier' => $user->getUserIdentifier(),
                 'withStatus' => 'true',
+                'page' => $page,
+                'size' => 10,
             ],
         ]);
     }

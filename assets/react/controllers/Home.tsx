@@ -8,21 +8,9 @@ import Enrichments from '../interfaces/Enrichments';
 import EnrichmentsList from '../components/EnrichmentsList';
 import SelectOption from '../interfaces/SelectOption';
 import AiModelInfrastructureCombination from '../interfaces/AiModelInfrastructureCombination';
-import { AVAILABLE_AIS, AVAILABLE_LANGUAGES, MEDIA_TYPES, NOTIFICATION_URL, TREATMENT_METADATA, TREATMENT_NOTES, TREATMENT_QUIZ } from '../constants';
+import { AVAILABLE_AIS, AVAILABLE_LANGUAGES, AVAILABLE_TREATMENTS, DEFAULT_TREATMENTS, MEDIA_TYPES, NOTIFICATION_URL, TREATMENT_METADATA, TREATMENT_NOTES, TREATMENT_QUIZ } from '../constants';
 import ErrorsResponse from '../interfaces/ErrorsResponse';
 import Error from '../interfaces/Error';
-
-
-export const AVAILABLE_TREATMENTS: SelectOption[] = [
-    {value: TREATMENT_METADATA, label: 'Métadonnées'},
-    {value: TREATMENT_QUIZ, label: 'Quiz'},
-    {value: TREATMENT_NOTES, label: 'Prise de notes'},
-]
-
-export const DEFAULT_TREATMENTS: SelectOption[] = [
-    {value: TREATMENT_METADATA, label: 'Métadonnées'},
-    {value: TREATMENT_QUIZ, label: 'Quiz'},
-]
 
 export default function () {
     const MAX_FILE_SIZE = 734003200;
@@ -41,6 +29,7 @@ export default function () {
     const [showSpinner, setShowSpinner] = useState<boolean>(false);
     const [uploadViaUrl, setUploadViaUrl] = useState<boolean>(true);
     const [errors, setErrors] = useState<Error[]>([]);
+    const [page, setPage] = useState<number>(1);
 
     const toggleModal = () => {
         setShowModal(!showModal);
@@ -60,10 +49,11 @@ export default function () {
         fetchAiModelInfrastructureCombinations();
     }, []);
 
-    const fetchEnrichments = () => {
-        fetch(Routing.generate('app_enrichments'))
+    const fetchEnrichments = (page: number = 1) => {
+        fetch(Routing.generate('app_enrichments') + `?page=${page}`)
             .then(response => response.json())
-            .then(data => {
+            .then((data: Enrichments) => {
+                setPage(page);
                 setEnrichments(data);
             })
     }
@@ -419,6 +409,36 @@ export default function () {
                     aiModelInfrastructureCombinations={aiModelInfrastructureCombinations}
                 />
             </div>
+            {enrichments && 
+                <div className='mt-5 w-100'>
+                    <div className='d-flex justify-content-center'>
+                        {page > 1 &&
+                            <>
+
+                                <Button className='mx-1' onClick={() => fetchEnrichments(page - 1)} variant='secondary'>
+                                    &lt;
+                                </Button>
+                                <Button className='mx-1' variant='secondary' onClick={() => fetchEnrichments(page - 1)}>
+                                    {page - 1}
+                                </Button>
+                            </>
+                        }
+                        <Button className='mx-1'>
+                            {page}
+                        </Button>
+                        {!enrichments.isLastPage && 
+                            <>
+                                <Button className='mx-1' variant='secondary' onClick={() => fetchEnrichments(page + 1)}>
+                                    {page + 1}
+                                </Button>
+                                <Button className='mx-1' onClick={() => fetchEnrichments(page + 1)} variant='secondary'>
+                                    &gt;
+                                </Button>
+                            </>
+                        }
+                    </div>
+                </div>
+            }
         </div>
     )
 }
