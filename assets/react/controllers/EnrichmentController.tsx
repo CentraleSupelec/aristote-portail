@@ -13,8 +13,7 @@ import makeAnimated from "react-select/animated";
 import Enrichment from '../interfaces/Enrichment';
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
-import Transcript from '../interfaces/Transcript';
-import { AVAILABLE_AIS, AVAILABLE_LANGUAGES, MEDIA_TYPES } from '../constants';
+import { AVAILABLE_AIS, AVAILABLE_LANGUAGES, MEDIA_TYPES, NOTIFICATION_URL } from '../constants';
 import AutoResizeTextarea from '../components/AutoResizeTextarea';
 
 interface EnrichmentControllerProps {
@@ -24,7 +23,6 @@ interface EnrichmentControllerProps {
 
 export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersion} : EnrichmentControllerProps) {
     moment.locale('fr');
-    const NOTIFICATION_URL = window.location.origin.replace('localhost', 'host.docker.internal');
     const [enrichmentVersion, setEnrichmentVersion] = useState<EnrichmentVersion>();
     const [enrichmentVersions, setEnrichmentVersions] = useState<EnrichmentVersion[]>([]);
 
@@ -384,12 +382,12 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                             </div>
                         }
                         <div className='my-2'>
-                            <Button variant='secondary' className='me-3' onClick={downloadTranscript}>Télécharger la transcription (JSON)</Button>
-                            <Button variant='secondary' className='me-3' onClick={() => downloadTranscriptSrt("srt")}>Télécharger la transcription (SRT)</Button>
-                            <Button variant='secondary' className='me-3' onClick={() => downloadTranscriptSrt("vtt")}>Télécharger la transcription (VTT)</Button>
+                            <Button variant='secondary' className='me-3 my-1' onClick={downloadTranscript}>Télécharger la transcription (JSON)</Button>
+                            <Button variant='secondary' className='me-3 my-1' onClick={() => downloadTranscriptSrt("srt")}>Télécharger la transcription (SRT)</Button>
+                            <Button variant='secondary' className='me-3 my-1' onClick={() => downloadTranscriptSrt("vtt")}>Télécharger la transcription (VTT)</Button>
 
                             {enrichmentVersion.multipleChoiceQuestions && enrichmentVersion.multipleChoiceQuestions.length > 0 &&
-                                <Button variant='secondary' onClick={downloadMultipleChoiceQuestions}>Télécharger le QCM</Button>
+                                <Button variant='secondary' className='me-3 my-1' onClick={downloadMultipleChoiceQuestions}>Télécharger le QCM</Button>
                             }
                         </div>
 
