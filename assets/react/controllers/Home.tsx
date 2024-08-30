@@ -423,9 +423,11 @@ export default function () {
                                 </Button>
                             </>
                         }
-                        <Button className='mx-1'>
-                            {page}
-                        </Button>
+                        {enrichments.totalElements !== 0 &&
+                            <Button className='mx-1'>
+                                {page}
+                            </Button>
+                        }
                         {!enrichments.isLastPage && 
                             <>
                                 <Button className='mx-1' variant='secondary' onClick={() => fetchEnrichments(page + 1)}>

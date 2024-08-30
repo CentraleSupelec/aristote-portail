@@ -97,7 +97,7 @@ class AristoteApiService
         } while ($retry);
 
         if ($response instanceof ResponseInterface) {
-            if ('application/json' === $response->getHeaders()['content-type'][0]) {
+            if ('application/json' === $response->getHeaders(false)['content-type'][0]) {
                 return new JsonResponse($response->toArray(false), $response->getStatusCode());
             } else {
                 $content = $response->getContent();
