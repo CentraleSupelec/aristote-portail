@@ -1,6 +1,6 @@
 import React, { BaseSyntheticEvent, ChangeEvent, ChangeEventHandler, useEffect, useState } from 'react';
 import Routing from '../../Routing';
-import { Alert, Button, Form, Modal, Spinner } from 'react-bootstrap';
+import { Alert, Button, Form, Modal, OverlayTrigger, Spinner, Tooltip } from 'react-bootstrap';
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
 import makeAnimated from "react-select/animated";
@@ -11,6 +11,8 @@ import AiModelInfrastructureCombination from '../interfaces/AiModelInfrastructur
 import { AVAILABLE_AIS, AVAILABLE_LANGUAGES, AVAILABLE_TREATMENTS, DEFAULT_TREATMENTS, MEDIA_TYPES, NOTIFICATION_URL, TREATMENT_METADATA, TREATMENT_NOTES, TREATMENT_QUIZ } from '../constants';
 import ErrorsResponse from '../interfaces/ErrorsResponse';
 import Error from '../interfaces/Error';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { OverlayInjectedProps } from 'react-bootstrap/esm/Overlay';
 
 export default function () {
     const MAX_FILE_SIZE = 734003200;
@@ -28,6 +30,7 @@ export default function () {
     const [disableForm, setDisableForm] = useState<boolean>(false);
     const [showSpinner, setShowSpinner] = useState<boolean>(false);
     const [uploadViaUrl, setUploadViaUrl] = useState<boolean>(true);
+    const [validUrl, setValidUrl] = useState<boolean>(null);
     const [errors, setErrors] = useState<Error[]>([]);
     const [page, setPage] = useState<number>(1);
 
@@ -39,6 +42,7 @@ export default function () {
         setDisableForm(false);
         setSelectedLanguage(null);
         setSelectedTranslateTo(null);
+        setValidUrl(null);
         setErrors([])
     };
 
@@ -230,8 +234,41 @@ export default function () {
     const toggleUploadMethod = () => {
         setErrors(errors.filter(error => error.path !== 'file' && error.path !== 'url'));
         setUploadViaUrl(!uploadViaUrl);
+        setValidUrl(null);
         setDisableForm(false);
     }
+
+    const validateUrl = async (event) => {
+        const url = event.target.parentElement.childNodes[0].value;
+
+        fetch(Routing.generate("validate_url"), {
+            method: 'POST',
+            body: JSON.stringify({
+                url
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                let newValidaUrl = data['validUrl']
+                setValidUrl(newValidaUrl);
+                if (!newValidaUrl) {
+                    let newErrors = errors.filter(error => error.path != "url")
+                    setErrors([...newErrors, {
+                        path: "url",
+                        message: "Le lien doit permettre le téléchargement du fichier vidéo ou audio ; un lien vers un lecteur média (youtube, vimeo, ...) ne pourra pas être utilisé pour créer un enrichissement"
+                    }])
+                } else {
+                    setErrors(errors.filter(error => error.path != "url"))
+                }
+            }
+        )
+    }
+
+    const renderTooltip = (props: OverlayInjectedProps) => {
+        return (<Tooltip id="create-enrichment-tooltip" {...props}>
+            Vérifier le lien que avez saisi
+        </Tooltip>)
+    };
 
     return (
         <div className='d-flex flex-column align-items-center'>
@@ -270,14 +307,22 @@ export default function () {
                             </div>
                             {uploadViaUrl? 
                                 <Form.Group className="mb-3" controlId="mediaUpload.url">
-                                    <Form.Label>URL du fichier média*</Form.Label>
-                                    <Form.Control
-                                        placeholder="Entrez l'URL de votre fichier"
-                                        type="string"
-                                        isInvalid={errors.filter(error => error.path === 'url').length > 0}
-                                    />
+                                    <Form.Label>URL du fichier média téléchargeable*</Form.Label>
+                                    <div className='d-flex'>
+                                        <Form.Control
+                                            onChange={() => setValidUrl(null)}
+                                            className='me-2'
+                                            placeholder="Entrez l’URL de votre fichier vidéo ou audio (mp4, webM, mp3 ...)"
+                                            type="string"
+                                            isInvalid={errors.filter(error => error.path === 'url').length > 0}
+                                        />
+                                        <FontAwesomeIcon className={`text-${validUrl? 'success': 'danger'} align-self-center me-2 opacity-${null == validUrl? '0': '100'}`} icon={validUrl? "circle-check": "circle-xmark"} size='xl' />
+                                        <Button onClick={validateUrl}>Tester</Button>
+                                    </div>
                                     {errors.filter(error => error.path === 'url').map((error, index) => {
-                                        return <Form.Control.Feedback type="invalid" key={`error-url-${index}`}>{error.message}</Form.Control.Feedback>
+                                        return <Alert variant='danger' className='my-3 py-1' key={`error-url-${index}`}>
+                                            <Form.Control.Feedback className='d-flex' type="invalid">{error.message}</Form.Control.Feedback>
+                                        </Alert>
                                     })}
                                 </Form.Group>
                                 :
@@ -388,15 +433,23 @@ export default function () {
                                 />
                             </Form.Group>
                             <div className='d-flex justify-content-end'>
-                                <Button id='create-enrichment-button' type='submit' disabled={disableForm}>
-                                    {showSpinner ?
-                                        <Spinner animation="border" size="sm" />
-                                        :
-                                        <span>
-                                            Créer un enrichissement
-                                        </span>
-                                    }
-                                </Button>
+                                <OverlayTrigger
+                                    placement="top"
+                                   overlay={!showSpinner && uploadViaUrl && !validUrl? renderTooltip: <></>}
+                                >
+                                    <div>
+                                        <Button id='create-enrichment-button' type='submit' disabled={disableForm || (uploadViaUrl && !validUrl)}>
+                                            {showSpinner ?
+                                                <Spinner animation="border" size="sm" />
+                                                :
+                                                <span>
+                                                    Créer un enrichissement
+                                                </span>
+                                            }
+                                        </Button>
+                                    </div>
+                                </OverlayTrigger>
+
                             </div>
                         </Form>
                     </Modal.Body>
