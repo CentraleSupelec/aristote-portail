@@ -169,6 +169,25 @@ class HomeController extends AbstractController
         return $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions/latest', $enrichmentId));
     }
 
+    #[Route(path: '/validate_url', name: 'validate_url', methods: ['POST'], options: ['expose' => true])]
+    public function validate_url(Request $request): JsonResponse
+    {
+        $requestBody = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $url = $requestBody['url'];
+        $headers = get_headers($url, 1);
+
+        if (array_key_exists('Content-Type', $headers)
+            && (
+                str_starts_with((string) $headers['Content-Type'], 'video/')
+                || str_starts_with((string) $headers['Content-Type'], 'audio/')
+            )
+        ) {
+            return new JsonResponse(['validUrl' => true]);
+        }
+
+        return new JsonResponse(['validUrl' => false]);
+    }
+
     #[Route('/api/enrichment/{enrichmentId}/versions', name: 'app_get_enrichment_versions', methods: ['GET'], options: ['expose' => true])]
     public function getEnrichmentVersions(string $enrichmentId): JsonResponse
     {
