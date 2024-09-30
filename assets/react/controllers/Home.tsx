@@ -241,6 +241,16 @@ export default function () {
     const validateUrl = async (event) => {
         const url = event.target.parentElement.childNodes[0].value;
 
+        if (null === url || '' === url) {
+            setValidUrl(false);
+            let newErrors = errors.filter(error => error.path != "url");
+            setErrors([...newErrors, {
+                path: "url",
+                message: "Le lien doit permettre le téléchargement du fichier vidéo ou audio ; un lien vers un lecteur média (youtube, vimeo, ...) ne pourra pas être utilisé pour créer un enrichissement"
+            }])
+            return
+        }
+            
         fetch(Routing.generate("validate_url"), {
             method: 'POST',
             body: JSON.stringify({
@@ -266,7 +276,7 @@ export default function () {
 
     const renderTooltip = (props: OverlayInjectedProps) => {
         return (<Tooltip id="create-enrichment-tooltip" {...props}>
-            Vérifier le lien que avez saisi
+            La validité de votre lien doit d’abord être testée
         </Tooltip>)
     };
 
@@ -310,7 +320,7 @@ export default function () {
                                     <Form.Label>URL du fichier média téléchargeable*</Form.Label>
                                     <div className='d-flex'>
                                         <Form.Control
-                                            onChange={() => setValidUrl(null)}
+                                            onChange={() => setValidUrl(true)}
                                             className='me-2'
                                             placeholder="Entrez l’URL de votre fichier vidéo ou audio (mp4, webM, mp3 ...)"
                                             type="string"
