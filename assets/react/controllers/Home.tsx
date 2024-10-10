@@ -14,7 +14,11 @@ import Error from '../interfaces/Error';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { OverlayInjectedProps } from 'react-bootstrap/esm/Overlay';
 
-export default function () {
+interface HomeProps {
+    user: string
+}
+
+export default function ({user}: HomeProps) {
     const MAX_FILE_SIZE = 734003200;
     const [enrichments, setEnrichments] = useState<Enrichments>();
     const [aiModelInfrastructureCombinations, setAiModelInfrastructureCombinations] = useState<AiModelInfrastructureCombination[]>([]);
@@ -445,7 +449,7 @@ export default function () {
                             <div className='d-flex justify-content-end'>
                                 <OverlayTrigger
                                     placement="top"
-                                   overlay={!showSpinner && uploadViaUrl && !validUrl? renderTooltip: <></>}
+                                    overlay={!showSpinner && uploadViaUrl && !validUrl? renderTooltip: <></>}
                                 >
                                     <div>
                                         <Button id='create-enrichment-button' type='submit' disabled={disableForm || (uploadViaUrl && !validUrl)}>
@@ -459,7 +463,6 @@ export default function () {
                                         </Button>
                                     </div>
                                 </OverlayTrigger>
-
                             </div>
                         </Form>
                     </Modal.Body>
@@ -470,6 +473,7 @@ export default function () {
                     enrichments={enrichments}
                     fetchEnrichments={fetchEnrichments}
                     aiModelInfrastructureCombinations={aiModelInfrastructureCombinations}
+                    user={user}
                 />
             </div>
             {enrichments && 

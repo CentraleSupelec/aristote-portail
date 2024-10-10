@@ -11,11 +11,13 @@ import makeAnimated from "react-select/animated";
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import { AVAILABLE_AIS, MEDIA_TYPES, NOTIFICATION_URL } from '../constants';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 interface EnrichmentsListProps {
     enrichments: Enrichments,
     fetchEnrichments: Function,
     aiModelInfrastructureCombinations: AiModelInfrastructureCombination[],
+    user: string
 }
 
 const STATUS_TRANSLATION = {
@@ -58,7 +60,7 @@ const renderTooltip = (props: OverlayInjectedProps) => (
     </Tooltip>
 );
 
-export default function ({enrichments, fetchEnrichments, aiModelInfrastructureCombinations}: EnrichmentsListProps) {
+export default function ({enrichments, fetchEnrichments, aiModelInfrastructureCombinations, user}: EnrichmentsListProps) {
     moment.locale('fr');
     const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
     const [showStatusModal, setShowStatusModal] = useState<boolean>(false);
@@ -209,11 +211,29 @@ export default function ({enrichments, fetchEnrichments, aiModelInfrastructureCo
                         {enrichments ? enrichments.content.map((enrichment, index) => 
                                 <tr className="border-bottom" key={`enrichment-row-${enrichment.id}`}>
                                     <td className="border-end text-center enrichment-id">
-                                        {enrichment.media ? 
-                                            enrichment.media.originalFileName + ' déposé le ' + moment(enrichment.createdAt).format('DD/MM/YYYY à HH:mm')
-                                            :
-                                            '-'
-                                        }
+                                        <div className='d-flex justify-content-center'>
+                                            <div>
+                                                {enrichment.endUserIdentifier != user &&
+                                                    <OverlayTrigger
+                                                        placement="top"
+                                                        overlay={
+                                                            <Tooltip>
+                                                                Collaborateur
+                                                            </Tooltip>
+                                                        }
+                                                    >
+                                                        <FontAwesomeIcon icon="people-group" className='text-success pe-2' />
+                                                    </OverlayTrigger>
+                                                }
+                                            </div>
+                                            <div>
+                                                {enrichment.media ? 
+                                                    enrichment.media.originalFileName + ' déposé le ' + moment(enrichment.createdAt).format('DD/MM/YYYY à HH:mm')
+                                                    :
+                                                    '-'
+                                                }
+                                            </div>
+                                        </div>
                                     </td>
                                     <td className="border-end text-center">
                                         <Badge
@@ -228,11 +248,13 @@ export default function ({enrichments, fetchEnrichments, aiModelInfrastructureCo
                                     <td className="border-end">
                                         <div className='d-flex flex-column flex-lg-row justify-content-center align-items-center'>
                                             {
+                                                enrichment.status === 'SUCCESS' ||  enrichment.aiGenerationCount > 1 ?
+                                                    <Button className='mb-2 mb-lg-0' href={'enrichments/'+enrichment.id}>Voir</Button> 
+                                                    : null
+                                            }
+                                            {
                                                 enrichment.status === 'SUCCESS' ? 
-                                                    <>
-                                                        <Button className='mb-2 mb-lg-0' href={'enrichments/'+enrichment.id}>Voir</Button> 
-                                                        <Button className='ms-2 mb-2 mb-lg-0' onClick={() => toggleRegenerateModal(index)}>Regénérer</Button> 
-                                                    </>
+                                                    <Button className='ms-2 mb-2 mb-lg-0' onClick={() => toggleRegenerateModal(index)}>Regénérer</Button> 
                                                     : null
                                             }
                                             <Button className='ms-2' onClick={() => toggleDeleteModal(enrichment)}>Supprimer</Button>

@@ -23,4 +23,7 @@ export default interface Enrichment {
     transribingStartedAt?: string,
     language?: string,
     translateTo?: string,
+    endUserIdentifier: string,
+    contributors: string[],
+    aiGenerationCount: number
 }
