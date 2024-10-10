@@ -25,8 +25,10 @@ class HomeController extends AbstractController
     #[Route('/', name: 'app_home', options: ['expose' => true])]
     public function home(): Response
     {
+        $user = $this->getUser();
+
         return $this->render('home/index.html.twig', [
-            'controller_name' => 'HomeController',
+            'user' => $user->getUserIdentifier(),
         ]);
     }
 
@@ -119,26 +121,54 @@ class HomeController extends AbstractController
     #[Route('/enrichments/{enrichmentId}', name: 'app_enrichment', options: ['expose' => true])]
     public function enrichmentById(string $enrichmentId): Response
     {
-        $data = json_decode($this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions/latest', $enrichmentId))->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $user = $this->getUser();
+        $enrichmentResponse = $this->getEnrichment($enrichmentId);
+
+        if (Response::HTTP_OK !== $enrichmentResponse->getStatusCode()) {
+            return $enrichmentResponse;
+        }
+        $enrichment = json_decode($enrichmentResponse->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        if ('SUCCESS' !== $enrichment['status']) {
+            $versionsResponse = $this->getEnrichmentVersions($enrichmentId, false);
+            $versions = json_decode($versionsResponse->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+            if ((is_countable($versions['content']) ? count($versions['content']) : 0) < 2) {
+                return new Response(status: Response::HTTP_FORBIDDEN);
+            }
+
+            $latestSuccessfulVersionId = $versions['content'][(is_countable($versions['content']) ? count($versions['content']) : 0) - 2]['id'];
+            $latestSuccessfulVersionResponse = $this->getEnrichmentVersion($enrichmentId, $latestSuccessfulVersionId, false);
+        } else {
+            $latestSuccessfulVersionResponse = $this->latestEnrichmentVersion($enrichmentId, false);
+        }
+
+        $latestSuccessfulVersion = json_decode($latestSuccessfulVersionResponse->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
         if (
-            true === $data['aiGenerated'] && null === $data['lastEvaluationDate']
+            true === $latestSuccessfulVersion['aiGenerated'] && null === $latestSuccessfulVersion['lastEvaluationDate']
             && (
-                null !== $data['enrichmentVersionMetadata'] || [] !== $data['multipleChoiceQuestions']
+                null !== $latestSuccessfulVersion['enrichmentVersionMetadata'] || [] !== $latestSuccessfulVersion['multipleChoiceQuestions']
             )
         ) {
             return $this->redirectToRoute('app_enrichment_evaluate', ['enrichmentId' => $enrichmentId]);
         }
 
-        return $this->render('home/enrichment.html.twig', ['enrichmentId' => $enrichmentId, 'enrichmentVersion' => $data]);
+        return $this->render('home/enrichment.html.twig', ['enrichmentId' => $enrichmentId, 'enrichmentVersion' => $latestSuccessfulVersion, 'user' => $user->getUserIdentifier()]);
     }
 
     #[Route('/enrichments/{enrichmentId}/create_new_version', name: 'app_create_new_version', options: ['expose' => true])]
     public function createNewVersion(string $enrichmentId): Response
     {
-        $data = json_decode($this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions/latest', $enrichmentId))->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $latestEnrichmentVersion = $this->latestEnrichmentVersion($enrichmentId);
 
-        return $this->render('home/new_enrichment_version.html.twig', ['enrichmentId' => $enrichmentId, 'enrichmentVersion' => $data]);
+        if (Response::HTTP_OK !== $latestEnrichmentVersion->getStatusCode()) {
+            return $latestEnrichmentVersion;
+        }
+
+        $latestEnrichmentVersionJson = json_decode($latestEnrichmentVersion->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        return $this->render('home/new_enrichment_version.html.twig', ['enrichmentId' => $enrichmentId, 'enrichmentVersion' => $latestEnrichmentVersionJson]);
     }
 
     #[Route('/enrichments/{enrichmentId}/evaluate', name: 'app_enrichment_evaluate', options: ['expose' => true])]
@@ -164,8 +194,16 @@ class HomeController extends AbstractController
     }
 
     #[Route('/api/enrichment/{enrichmentId}/versions/latest', name: 'app_latest_enrichment_version', options: ['expose' => true])]
-    public function latestEnrichmentVersion(string $enrichmentId): JsonResponse
+    public function latestEnrichmentVersion(string $enrichmentId, bool $checkAuthorization = true): Response
     {
+        if ($checkAuthorization) {
+            $enrichmentResponse = $this->getEnrichment($enrichmentId);
+
+            if (Response::HTTP_OK !== $enrichmentResponse->getStatusCode()) {
+                return $enrichmentResponse;
+            }
+        }
+
         return $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions/latest', $enrichmentId));
     }
 
@@ -189,26 +227,56 @@ class HomeController extends AbstractController
     }
 
     #[Route('/api/enrichment/{enrichmentId}/versions', name: 'app_get_enrichment_versions', methods: ['GET'], options: ['expose' => true])]
-    public function getEnrichmentVersions(string $enrichmentId): JsonResponse
+    public function getEnrichmentVersions(string $enrichmentId, bool $checkAuthorization = true): Response
     {
+        if ($checkAuthorization) {
+            $enrichmentResponse = $this->getEnrichment($enrichmentId);
+
+            if (Response::HTTP_OK !== $enrichmentResponse->getStatusCode()) {
+                return $enrichmentResponse;
+            }
+        }
+
         return $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions?withTranscript=false&order=ASC&size=50', $enrichmentId));
     }
 
     #[Route('/api/enrichment/{enrichmentId}/versions/{versionId}', name: 'app_get_enrichment_version', options: ['expose' => true])]
-    public function getEnrichmentVersion(string $enrichmentId, string $versionId): JsonResponse
+    public function getEnrichmentVersion(string $enrichmentId, string $versionId, bool $checkAuthorization = true): Response
     {
+        if ($checkAuthorization) {
+            $enrichmentResponse = $this->getEnrichment($enrichmentId);
+
+            if (Response::HTTP_OK !== $enrichmentResponse->getStatusCode()) {
+                return $enrichmentResponse;
+            }
+        }
+
         return $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s/versions/%s', $enrichmentId, $versionId));
     }
 
     #[Route('/api/enrichment/{enrichmentId}', name: 'app_get_enrichment', options: ['expose' => true])]
-    public function getEnrichment(string $enrichmentId): JsonResponse
+    public function getEnrichment(string $enrichmentId): Response
     {
-        return $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s', $enrichmentId));
+        $user = $this->getUser();
+        $enrichmentResponse = $this->aristoteApiService->apiRequestWithToken('GET', sprintf('/enrichments/%s', $enrichmentId));
+        $enrichment = json_decode($enrichmentResponse->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        if ($enrichment['endUserIdentifier'] === $user->getUserIdentifier() || in_array($user->getUserIdentifier(), $enrichment['contributors'])) {
+            return $enrichmentResponse;
+        } else {
+            return new Response(status: Response::HTTP_UNAUTHORIZED);
+        }
     }
 
     #[Route('/api/enrichments/{enrichmentId}', name: 'app_delete_enrichment', options: ['expose' => true], methods: ['DELETE'])]
     public function deleteEnrichmentById(string $enrichmentId): Response
     {
+        $enrichmentResponse = $this->getEnrichment($enrichmentId);
+
+        if (Response::HTTP_OK !== $enrichmentResponse->getStatusCode()) {
+            return $enrichmentResponse;
+        }
+
         return $this->aristoteApiService->apiRequestWithToken('DELETE', sprintf('/enrichments/%s', $enrichmentId));
     }
 
@@ -219,8 +287,14 @@ class HomeController extends AbstractController
     }
 
     #[Route('/api/enrichment/{enrichmentId}/versions/{versionId}/evaluate', name: 'app_evaluate_enrichment_version', methods: ['POST'], options: ['expose' => true])]
-    public function evaluatEnrichmentVersion(string $enrichmentId, string $versionId, Request $request): JsonResponse
+    public function evaluatEnrichmentVersion(string $enrichmentId, string $versionId, Request $request): Response
     {
+        $enrichmentResponse = $this->getEnrichment($enrichmentId);
+
+        if (Response::HTTP_OK !== $enrichmentResponse->getStatusCode()) {
+            return $enrichmentResponse;
+        }
+
         $requestBody = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
         return $this->aristoteApiService->apiRequestWithToken('POST', sprintf('/enrichments/%s/versions/%s/evaluate', $enrichmentId, $versionId), [
@@ -231,6 +305,12 @@ class HomeController extends AbstractController
     #[Route('/api/enrichment/{enrichmentId}/versions/{versionId}/mcq/{mcqId}', name: 'app_evaluate_mcq', methods: ['POST'], options: ['expose' => true])]
     public function evaluateMcq(string $enrichmentId, string $versionId, string $mcqId, Request $request): JsonResponse
     {
+        $enrichmentResponse = $this->getEnrichment($enrichmentId);
+
+        if (Response::HTTP_OK !== $enrichmentResponse->getStatusCode()) {
+            return $enrichmentResponse;
+        }
+
         $requestBody = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
         return $this->aristoteApiService->apiRequestWithToken('POST', sprintf('/enrichments/%s/versions/%s/mcq/%s', $enrichmentId, $versionId, $mcqId), [
@@ -241,6 +321,12 @@ class HomeController extends AbstractController
     #[Route('/api/enrichment/{enrichmentId}/versions/{versionId}/mcq/{mcqId}/choice/{choiceId}', name: 'app_evaluate_choice', methods: ['POST'], options: ['expose' => true])]
     public function evaluateChoice(string $enrichmentId, string $versionId, string $mcqId, string $choiceId, Request $request): JsonResponse
     {
+        $enrichmentResponse = $this->getEnrichment($enrichmentId);
+
+        if (Response::HTTP_OK !== $enrichmentResponse->getStatusCode()) {
+            return $enrichmentResponse;
+        }
+
         $requestBody = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
         return $this->aristoteApiService->apiRequestWithToken('POST',
@@ -254,6 +340,12 @@ class HomeController extends AbstractController
     #[Route('/api/enrichment/{enrichmentId}/versions', name: 'app_create_enrichment_version', methods: ['POST'], options: ['expose' => true])]
     public function createEnrichmentVersion(string $enrichmentId, Request $request): JsonResponse
     {
+        $enrichmentResponse = $this->getEnrichment($enrichmentId);
+
+        if (Response::HTTP_OK !== $enrichmentResponse->getStatusCode()) {
+            return $enrichmentResponse;
+        }
+
         $multipleChoiceQuestions = $request->request->get('multipleChoiceQuestions');
         $enrichmentVersionMetadata = $request->request->get('enrichmentVersionMetadata');
         $notes = $request->request->get('notes');
@@ -277,6 +369,12 @@ class HomeController extends AbstractController
     #[Route('/api/enrichment/{enrichmentId}/versions/{versionId}/download_transcript', name: 'app_download_transcript', options: ['expose' => true])]
     public function downloadTranscript(string $enrichmentId, string $versionId, Request $request): BinaryFileResponse
     {
+        $enrichmentResponse = $this->getEnrichment($enrichmentId);
+
+        if (Response::HTTP_OK !== $enrichmentResponse->getStatusCode()) {
+            return $enrichmentResponse;
+        }
+
         $format = $request->query->get('format', 'srt');
         $language = $request->query->get('language');
 

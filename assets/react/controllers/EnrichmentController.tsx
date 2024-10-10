@@ -15,13 +15,15 @@ import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import { AVAILABLE_AIS, AVAILABLE_LANGUAGES, MEDIA_TYPES, NOTIFICATION_URL } from '../constants';
 import AutoResizeTextarea from '../components/AutoResizeTextarea';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 interface EnrichmentControllerProps {
     enrichmentId: string,
-    enrichmentVersion: EnrichmentVersion
+    enrichmentVersion: EnrichmentVersion,
+    user: string
 }
 
-export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersion} : EnrichmentControllerProps) {
+export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersion, user} : EnrichmentControllerProps) {
     moment.locale('fr');
     const [enrichmentVersion, setEnrichmentVersion] = useState<EnrichmentVersion>();
     const [enrichmentVersions, setEnrichmentVersions] = useState<EnrichmentVersion[]>([]);
@@ -31,6 +33,8 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
     const [selectedDisciplines, setSelectedDisciplines] = useState<SelectOption[]>([]);
     const [selectedAiModelInfrastructureCombination, setSelectedAiModelInfrastructureCombination] = useState<AiModelInfrastructureCombination>();
     const [selectedEvaluationAi, setSelectedEvaluationAi] = useState<SelectOption>();
+    const [mediaName, setMediaName] = useState<string>();
+    const [collaborator, setCollaborator] = useState<boolean>(false);
     const [showTranslation, setShowTranslation] = useState<boolean>(false);
 
     const [showModal, setShowModal] = useState<boolean>(false);
@@ -90,6 +94,8 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                 setSelectedDisciplines(data.disciplines.map(discipline => ({label: discipline, value: discipline})))
                 setSelectedMediaTypes(data.mediaTypes.map(discipline => ({label: discipline, value: discipline})))
                 setSelectedEvaluationAi({value: data.aiEvaluation, label: data.aiEvaluation})
+                setMediaName(data.media.originalFileName)
+                setCollaborator(data.endUserIdentifier !== user)
                 setLoadingEnrichment(false);
             })
     }
@@ -298,6 +304,32 @@ export default function ({enrichmentId, enrichmentVersion: inputEnrichmentVersio
                 enrichmentVersion?
                 <div>
                     <div className='d-flex flex-column'>
+                        <div className='d-flex align-items-center'>
+                            <strong className='pe-2'>Nom du média :</strong>
+                            {loadingEnrichment &&
+                                <div>
+                                    <Spinner size='sm'></Spinner>
+                                </div>
+                            }
+                            {collaborator &&
+                                <OverlayTrigger
+                                    placement="top"
+                                    overlay={
+                                        <Tooltip>
+                                            Collaborateur
+                                        </Tooltip>
+                                    }
+                                >
+                                    <FontAwesomeIcon icon="people-group" className='text-success pe-2' />
+                                </OverlayTrigger>
+                            }
+                            {!loadingEnrichment &&
+                                <div>
+                                    {mediaName}
+                                </div>
+                            }
+                        </div>
+                        
                         <div className='d-flex'>
                             <strong className='pe-2'>Versions :</strong>
                             {!loadingVersions && enrichmentVersions.map((eV, index) => 
