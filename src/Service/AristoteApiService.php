@@ -68,6 +68,7 @@ class AristoteApiService
         $this->initToken();
         $options['headers'] += [
             'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
         ];
 
         $retryCount = 0;

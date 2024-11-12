@@ -324,7 +324,7 @@ export default function ({user}: HomeProps) {
                                     <Form.Label>URL du fichier média téléchargeable*</Form.Label>
                                     <div className='d-flex'>
                                         <Form.Control
-                                            onChange={() => setValidUrl(true)}
+                                            onChange={() => setValidUrl(null)}
                                             className='me-2'
                                             placeholder="Entrez l’URL de votre fichier vidéo ou audio (mp4, webM, mp3 ...)"
                                             type="string"
