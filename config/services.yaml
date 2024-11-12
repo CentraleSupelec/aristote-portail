@@ -23,17 +23,17 @@ services:
       - "../src/Entity/"
       - "../src/Kernel.php"
 
-  app.aristote_front:
+  app.aristote_api_service:
     class: App\Service\AristoteApiService
     arguments:
       $clientId: "%env(ARISTOTE_CLIENT_ID)%"
       $clientSecret: "%env(ARISTOTE_SECRET)%"
       $uriPrefix: "%env(ARISTOTE_API_URI_PREFIX)%"
 
-  App\Controller\Front\HomeController:
+  App\Controller\Api\EnrichmentsApiController:
     arguments:
       $fromEmail: "%env(FROM_EMAIL)%"
-      $aristoteApiService: '@app.aristote_front'
+      $aristoteApiService: '@app.aristote_api_service'
   
   App\Controller\Front\RegistrationController:
     arguments:
