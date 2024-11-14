@@ -30,7 +30,7 @@ class AristoteApiService
         private readonly string $clientSecret,
         private readonly string $uriPrefix,
         private readonly LoggerInterface $logger,
-        private readonly HttpClientInterface $httpClient
+        private readonly HttpClientInterface $httpClient,
     ) {
     }
 
@@ -133,11 +133,11 @@ class AristoteApiService
             try {
                 $response = $this->httpClient->request('POST', sprintf('%s/api/token', $this->uriPrefix), [
                     'headers' => [
-                            'Authorization' => 'Basic '.base64_encode($this->clientId.':'.$this->clientSecret),
-                        ],
-                        'body' => [
-                            'grant_type' => 'client_credentials',
-                        ],
+                        'Authorization' => 'Basic '.base64_encode($this->clientId.':'.$this->clientSecret),
+                    ],
+                    'body' => [
+                        'grant_type' => 'client_credentials',
+                    ],
                 ]);
 
                 if (200 !== $response->getStatusCode()) {

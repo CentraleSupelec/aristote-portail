@@ -23,7 +23,7 @@ class RegistrationController extends AbstractController
 {
     public function __construct(
         private readonly string $fromEmail,
-        private readonly EmailVerifier $emailVerifier
+        private readonly EmailVerifier $emailVerifier,
     ) {
     }
 

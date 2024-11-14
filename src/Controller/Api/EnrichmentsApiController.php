@@ -18,7 +18,7 @@ class EnrichmentsApiController extends AbstractController
 {
     public function __construct(
         private readonly string $fromEmail,
-        private readonly AristoteApiService $aristoteApiService
+        private readonly AristoteApiService $aristoteApiService,
     ) {
     }
 

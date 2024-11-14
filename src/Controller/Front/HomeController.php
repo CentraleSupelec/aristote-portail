@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class HomeController extends AbstractController
 {
     public function __construct(
-        private readonly EnrichmentsApiController $enrichmentsApiController
+        private readonly EnrichmentsApiController $enrichmentsApiController,
     ) {
     }
 

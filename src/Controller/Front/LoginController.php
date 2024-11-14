@@ -24,7 +24,7 @@ class LoginController extends AbstractController
     public function __construct(
         private readonly bool $keycloakEnabled,
         private readonly string $keycloakSuggestedIdentityProviderIdentifier,
-        private readonly string $keycloakSuggestedIdentityProviderLabel
+        private readonly string $keycloakSuggestedIdentityProviderLabel,
     ) {
     }
 
