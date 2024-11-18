@@ -45,10 +45,6 @@ services:
       $keycloakSuggestedIdentityProviderLabel: '%env(KEYCLOAK_SUGGESTED_IDENTITY_PROVIDER_LABEL)%'
       $keycloakSuggestedIdentityProviderIdentifier: "%env(KEYCLOAK_SUGGESTED_IDENTITY_PROVIDER_IDENTIFIER)%"
 
-  App\Security\UserChecker:
-    arguments:
-      $keycloakSuggestedIdentityProviderLabel: "%env(KEYCLOAK_SUGGESTED_IDENTITY_PROVIDER_LABEL)%"
-
   Stevenmaguire\OAuth2\Client\Provider\Keycloak:
     class: Stevenmaguire\OAuth2\Client\Provider\Keycloak
     arguments:

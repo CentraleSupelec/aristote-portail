@@ -117,7 +117,7 @@ class User implements Stringable, UserInterface, PasswordAuthenticatedUserInterf
         return $this;
     }
 
-    public function eraseCredentials()
+    public function eraseCredentials(): void
     {
         $this->setPlainPassword(null);
     }
